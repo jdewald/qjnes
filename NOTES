@@ -1,0 +1,50 @@
+64kb RAM
+Video = MOS Technology VIC-II
+	16 colors
+	8 sprites (24x21 pixels or 12x21 in multicolor mode)
+	scrolling
+	2 bitmap graphics modes 
+		320x200 with 2 colors in each 8x8 block
+		160x200 with 3 colors plus background in each 4x8 block
+	40 column text
+	8 Mhz dot-clock
+	14.31818 Mhz (NTSC)
+Sound = MOS Technology SID
+	3 channels
+Main Processor = 8-bit MOS Technology 6510 
+	- 6502 with added 6-bit internal I/O port used to switch ROM's in and out as well as operate tape recorder.
+	- 1.023 Mhz 
+
+HOWTO load test suite:
+Start emulator at E39D
+Load _start file
+SYS 2049
+RUN
+
+**** LOADRAM interception ****
+When using the test suite, it goes straight to F49E (load ram from a device)
+That jumps to F4A5 after storing $C3 in X and $C4 in Y
+F4AB It then checks the device number (which is set during a load) from $BA (must be something other than 0)
+  -- 3 = keyboard
+  -- 8 = device
+F4B8 Checks length of current filename in $B7
+F4BF Checks logical file number in $B9
+;; F5AF display loading message...
+F5AF Checks load mode from $9D (0x80 = direct, 0x00 = program)
+F5B3 Calls F12F to show "searching"
+F5C7 Reads and outputs filename from ($BB)
+
+F4C8 Opens serial device by calling F3D5
+
+F3FC - F404 - outputs filename to serial device 
+Should find out filename and load from there
+
+F4D5 Calls EE13 to read from device
+F31F STA $BA
+FE02   86 BA      STX $BA
+
+
+
+
+
+

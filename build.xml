@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+
+<project name="C64 Emulator" default="compile" basedir=".">
+
+<!-- set global properties for this build -->
+<property name="src" value="src" />
+<property name="src.java" value="${src}/java" />
+<property name="build" value="classes" />
+<property name="default.classpath" value="c64.classpath" />
+<property name="lint4j.level" value="5" />
+<property name="lint4j.exact" value="false" />
+<path id="c64.classpath">
+   <pathelement location="${build}"/>
+   <fileset dir="lib" />
+</path>
+<target name="init">
+<!-- Create the time stamp -->
+<tstamp/>
+</target>
+
+<target name="compile" depends="init">
+<mkdir dir="${build}" />
+<!-- Compile the java code from ${src} into ${build} -->
+<javac classpathref="c64.classpath" srcdir="${src.java}" destdir="${build}" debug="on"/>
+</target>
+
+<target name="clean">
+   <delete dir="${build}" />
+</target>
+
+<target name="run" depends="compile">
+   <java classpathref="${default.classpath}"
+         classname="org.fortytwo.c64.Emulator"
+         fork="yes">
+	 <sysproperty key="java.library.path" value="native" />
+   </java>
+ 
+</target>
+
+<target name="nes" depends="compile">
+   <java classpathref="${default.classpath}"
+         classname="org.fortytwo.c64.NES"
+         fork="yes">
+	 <arg value="${rom}" />
+
+	 <sysproperty key="java.library.path" value="native" />
+   </java>
+ 
+</target>
+
+
+<target name="run-class" depends="compile">
+   <java classpathref="${default.classpath}"
+         classname="org.fortytwo.c64.NES"
+	 fork="yes">
+	 <sysproperty key="java.library.path" value="native" />
+   </java>
+</target>
+
+<target name="library">
+   <ant dir="library" target="jar" inheritAll="true" />
+</target>
+
+<target name="web" depends="library">
+   <ant dir="webapp" target="web" inheritAll="true" />
+</target>
+
+<target name="copyWebapp" depends="library">
+   <ant dir="webapp" target="copyWar" inheritAll="true" />
+</target>
+
+<taskdef name="lint4j" classname="com.jutils.lint4j.ant.Lint4jAntTask">
+    <classpath><pathelement location="lib/lint4j.jar"/></classpath>
+</taskdef>
+
+<target name="check-sources" description="Perform checks on Sources">
+  <lint4j ignorePackages="org.apache.tomcat.util.net.puretls,org.apache.coyote.tomcat3,org.apache.ajp.tomcat33"  packages="org.fortytwo.c64.*" level="${lint4j.level}" exact="${lint4j.exact}">
+    <sourcepath>
+	  <dirset dir="${src.java}">
+	  </dirset>
+	</sourcepath>
+	<classpath>
+<!--	  <fileset dir="${build}">
+		<include name="**/*.jar" />
+	  </fileset>
+      -->
+	</classpath>
+    <formatters>
+      <formatter type="text" />
+      <formatter type="text" toFile="lint.out"/>
+      <formatter type="xml" toFile="lint.xml"/>
+    </formatters>
+  </lint4j>
+</target>
+
+</project>

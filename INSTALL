@@ -1,0 +1,28 @@
+General requirements:
+JRE/JDK 1.5
+Ant (optional)
+
+---- [Commodore 64] ----
+In order to use the Commodore 64 Emulator, you must obtain ROM files the Kernal,BASIC, Character ROM files.
+
+Place them into the roms directory:
+
+kernal.901227-03.bin
+basic.901226-01.bin
+characters.901225-01.bin
+
+just doing 'ant run' will start up the C64
+
+
+---- [NES] ----
+
+'ant nes -Drom="<path to rom>" will fire up the NES Emulator with that ROM
+
+More than likely it won't actually work ;)
+
+Some successful ones:
+Super Mario Brothers
+Zelda
+Super Mario Brothers 3
+
+

@@ -1,0 +1,402 @@
+;; Object cpu/
+;; SEMANTICDB Tags save file
+(semanticdb-project-database-file "cpu/"
+  :tables (list 
+   (semanticdb-table "ADC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("ADC_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("cycles" variable (:type "int") (reparse-symbol class_member_declaration) [176 187]) ("ADC_Instruction" function (:constructor-flag t :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [208 227]))) (reparse-symbol class_member_declaration) [192 759]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [784 798]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [800 813]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [815 834])) :type "int") (reparse-symbol class_member_declaration) [765 1227])) :type "class") nil [120 1229]))
+    :file "ADC_Instruction.java"
+    :pointmax 1230
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "AND_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("AND_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("cycles" variable (:type "int") (reparse-symbol class_member_declaration) [168 179]) ("AND_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [207 226]))) (reparse-symbol class_member_declaration) [184 718]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [743 757]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [759 772]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [774 793])) :type "int") (reparse-symbol class_member_declaration) [724 1027])) :type "class") nil [113 1031]))
+    :file "AND_Instruction.java"
+    :pointmax 1032
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "ASL_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("ASL_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("cycles" variable (:type "int") (reparse-symbol class_member_declaration) [142 153]) ("ASL_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [181 200]))) (reparse-symbol class_member_declaration) [158 527])) :type "class") nil [86 529]))
+    :file "ASL_Instruction.java"
+    :pointmax 530
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BCC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("BCC_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BCC_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [189 208]))) (reparse-symbol class_member_declaration) [166 376]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [401 415]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [417 430]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [432 451])) :type "void") (reparse-symbol class_member_declaration) [382 591])) :type "class") nil [95 593]))
+    :file "BCC_Instruction.java"
+    :pointmax 594
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BCS_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("BCS_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BCS_Instruction" function (:constructor-flag t :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [166 185]))) (reparse-symbol class_member_declaration) [150 214]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [240 254]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [256 269]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [271 290])) :type "void") (reparse-symbol class_member_declaration) [220 412])) :type "class") nil [95 414]))
+    :file "BCS_Instruction.java"
+    :pointmax 416
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BEQ_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("BEQ_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BEQ_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [173 192]))) (reparse-symbol class_member_declaration) [150 221]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [247 261]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [263 276]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [278 297])) :type "void") (reparse-symbol class_member_declaration) [227 418])) :type "class") nil [95 420]))
+    :file "BEQ_Instruction.java"
+    :pointmax 421
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BIT_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("BIT_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BIT_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [158 177]))) (reparse-symbol class_member_declaration) [135 206])) :type "class") nil [80 208]))
+    :file "BIT_Instruction.java"
+    :pointmax 209
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BMI_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("BMI_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BMI_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [183 202]))) (reparse-symbol class_member_declaration) [160 231]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [257 271]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [273 286]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [288 307])) :type "void") (reparse-symbol class_member_declaration) [237 429])) :type "class") nil [105 431]))
+    :file "BMI_Instruction.java"
+    :pointmax 432
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BNE_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("BNE_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BNE_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [232 251]))) (reparse-symbol class_member_declaration) [209 280]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [306 320]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [322 335]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [337 356])) :type "void") (reparse-symbol class_member_declaration) [286 479])) :type "class") nil [154 486]))
+    :file "BNE_Instruction.java"
+    :pointmax 487
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BPL_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("BPL_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BPL_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [173 192]))) (reparse-symbol class_member_declaration) [150 221]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [247 261]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [263 276]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [278 297])) :type "void") (reparse-symbol class_member_declaration) [227 420])) :type "class") nil [95 422]))
+    :file "BPL_Instruction.java"
+    :pointmax 423
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BRK_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("BRK_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("BRK_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [120 139]))) (reparse-symbol class_member_declaration) [97 168])) :type "class") nil [32 171]))
+    :file "BRK_Instruction.java"
+    :pointmax 172
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BVC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("BVC_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BVC_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [133 152]))) (reparse-symbol class_member_declaration) [110 181])) :type "class") nil [55 183]))
+    :file "BVC_Instruction.java"
+    :pointmax 184
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "BVS_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("BVS_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("BVS_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [133 152]))) (reparse-symbol class_member_declaration) [110 181])) :type "class") nil [55 183]))
+    :file "BVS_Instruction.java"
+    :pointmax 184
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "CLC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("CLI_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("CLI_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [188 207]))) (reparse-symbol class_member_declaration) [165 236])) :type "class") nil [100 362]))
+    :file "CLC_Instruction.java"
+    :pointmax 349
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "CMP_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("CMP_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("CMP_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [193 212]))) (reparse-symbol class_member_declaration) [170 241]) ("execute" function (:typemodifiers ("public") :arguments (("operands[]" variable (:type "int") (reparse-symbol formal_parameters) [267 281]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [283 296]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [298 317])) :type "void") (reparse-symbol class_member_declaration) [247 606])) :type "class") nil [114 608]))
+    :file "CMP_Instruction.java"
+    :pointmax 609
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "CPX_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("CPX_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("CPX_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [188 207]))) (reparse-symbol class_member_declaration) [165 236]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [262 276]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [278 291]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [293 312])) :type "void") (reparse-symbol class_member_declaration) [242 448])) :type "class") nil [110 454]))
+    :file "CPX_Instruction.java"
+    :pointmax 455
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "CPY_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("CPY_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("CPY_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [148 167]))) (reparse-symbol class_member_declaration) [125 196])) :type "class") nil [70 198]))
+    :file "CPY_Instruction.java"
+    :pointmax 199
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "DEC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("DEC_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("DEC_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [185 204]))) (reparse-symbol class_member_declaration) [162 233]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [258 272]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [274 287]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [289 308])) :type "void") (reparse-symbol class_member_declaration) [238 516])) :type "class") nil [107 518]))
+    :file "DEC_Instruction.java"
+    :pointmax 519
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "EOR_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("EOR_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("EOR_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [151 170]))) (reparse-symbol class_member_declaration) [128 199])) :type "class") nil [73 201]))
+    :file "EOR_Instruction.java"
+    :pointmax 202
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "INC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("INC_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("INC_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [184 203]))) (reparse-symbol class_member_declaration) [161 232]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [258 272]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [274 287]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [289 308])) :type "void") (reparse-symbol class_member_declaration) [238 517])) :type "class") nil [106 519]))
+    :file "INC_Instruction.java"
+    :pointmax 520
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "INX_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("INX_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("INX_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [196 215]))) (reparse-symbol class_member_declaration) [173 244]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [270 284]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [286 299]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [301 320])) :type "void") (reparse-symbol class_member_declaration) [250 522])) :type "class") nil [108 528]))
+    :file "INX_Instruction.java"
+    :pointmax 529
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "INY_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("INY_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("INY_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [195 214]))) (reparse-symbol class_member_declaration) [172 243]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [270 284]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [286 299]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [301 320])) :type "void") (reparse-symbol class_member_declaration) [250 522])) :type "class") nil [107 528]))
+    :file "INY_Instruction.java"
+    :pointmax 529
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "JMP_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("JMP_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("JMP_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [185 204]))) (reparse-symbol class_member_declaration) [162 233]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [259 273]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [275 288]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [290 309])) :type "void") (reparse-symbol class_member_declaration) [239 398])) :type "class") nil [107 400]))
+    :file "JMP_Instruction.java"
+    :pointmax 401
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "JSR_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("JSR_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("JSR_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [205 224]))) (reparse-symbol class_member_declaration) [182 253]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [305 319]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [321 334]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [336 355])) :type "void") (reparse-symbol class_member_declaration) [285 924])) :type "class") nil [127 926]))
+    :file "JSR_Instruction.java"
+    :pointmax 927
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "LDA_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("LDA_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("LDA_Instruction" function (:constructor-flag t :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [185 204]))) (reparse-symbol class_member_declaration) [169 232]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [258 272]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [274 287]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [289 308])) :type "void") (reparse-symbol class_member_declaration) [238 488])) :type "class") nil [112 490]))
+    :file "LDA_Instruction.java"
+    :pointmax 491
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "LDX_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("LDX_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("LDX_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [186 205]))) (reparse-symbol class_member_declaration) [163 234]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [260 274]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [276 289]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [291 310])) :type "void") (reparse-symbol class_member_declaration) [240 543])) :type "class") nil [108 545]))
+    :file "LDX_Instruction.java"
+    :pointmax 546
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "LDY_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("LDY_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("LDY_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [185 204]))) (reparse-symbol class_member_declaration) [162 233]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [259 273]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [275 288]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [290 309])) :type "void") (reparse-symbol class_member_declaration) [239 549])) :type "class") nil [107 551]))
+    :file "LDY_Instruction.java"
+    :pointmax 552
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "LSR_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("LSR_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("LSR_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [165 184]))) (reparse-symbol class_member_declaration) [142 213])) :type "class") nil [87 215]))
+    :file "LSR_Instruction.java"
+    :pointmax 216
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "ORA_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("ORA_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("ORA_Instruction" function (:constructor-flag t :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [231 250]))) (reparse-symbol class_member_declaration) [215 279]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [305 319]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [321 334]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [336 355])) :type "void") (reparse-symbol class_member_declaration) [285 573])) :type "class") nil [160 577]))
+    :file "ORA_Instruction.java"
+    :pointmax 578
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "PHA_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("PHA_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("PHA_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [157 176]))) (reparse-symbol class_member_declaration) [134 205])) :type "class") nil [69 207]))
+    :file "PHA_Instruction.java"
+    :pointmax 208
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "PLA_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("PLP_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("PLP_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [159 178]))) (reparse-symbol class_member_declaration) [136 207])) :type "class") nil [71 209]))
+    :file "PLA_Instruction.java"
+    :pointmax 210
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "ROL_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("ROL_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("ROL_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [205 224]))) (reparse-symbol class_member_declaration) [182 253]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [279 293]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [295 308]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [310 329])) :type "void") (reparse-symbol class_member_declaration) [259 934])) :type "class") nil [127 936]))
+    :file "ROL_Instruction.java"
+    :pointmax 937
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "ROR_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("ROR_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("ROR_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [206 225]))) (reparse-symbol class_member_declaration) [183 254]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [279 293]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [295 308]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [310 329])) :type "void") (reparse-symbol class_member_declaration) [259 926])) :type "class") nil [128 928]))
+    :file "ROR_Instruction.java"
+    :pointmax 929
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "RTS_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("RTI_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("RTI_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [194 213]))) (reparse-symbol class_member_declaration) [171 242])) :type "class") nil [106 686]))
+    :file "RTS_Instruction.java"
+    :pointmax 673
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "SBC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("SBC_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("SBC_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [166 185]))) (reparse-symbol class_member_declaration) [143 214])) :type "class") nil [88 216]))
+    :file "SBC_Instruction.java"
+    :pointmax 217
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "SEC_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("SEC_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("SEC_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [146 165]))) (reparse-symbol class_member_declaration) [123 194])) :type "class") nil [58 196]))
+    :file "SEC_Instruction.java"
+    :pointmax 197
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "STA_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("STA_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("STA_Instruction" function (:constructor-flag t :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [183 202]))) (reparse-symbol class_member_declaration) [167 231]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [257 271]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [273 286]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [288 307])) :type "void") (reparse-symbol class_member_declaration) [237 413])) :type "class") nil [111 415]))
+    :file "STA_Instruction.java"
+    :pointmax 416
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "STX_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("STX_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("STX_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [185 204]))) (reparse-symbol class_member_declaration) [162 233]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [259 273]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [275 288]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [290 309])) :type "void") (reparse-symbol class_member_declaration) [239 405])) :type "class") nil [107 407]))
+    :file "STX_Instruction.java"
+    :pointmax 408
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "STY_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("STY_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("STY_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [184 203]))) (reparse-symbol class_member_declaration) [161 232]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [258 272]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [274 287]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [289 308])) :type "void") (reparse-symbol class_member_declaration) [238 404])) :type "class") nil [106 406]))
+    :file "STY_Instruction.java"
+    :pointmax 407
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "TYA_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("TYA_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("TYA_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [203 222]))) (reparse-symbol class_member_declaration) [180 251]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [277 291]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [293 306]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [308 327])) :type "void") (reparse-symbol class_member_declaration) [257 446])) :type "class") nil [115 453]))
+    :file "TYA_Instruction.java"
+    :pointmax 454
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("java.util.Map" include nil nil [72 93]) ("java.util.Hashtable" include nil nil [94 121]) ("Instruction" type (:typemodifiers ("public" "abstract") :members (("addressMode" variable (:typemodifiers ("private") :type "AddressingMode") (reparse-symbol class_member_declaration) [1053 1088]) ("assembly" variable (:typemodifiers ("private") :type "String") (reparse-symbol class_member_declaration) [1093 1117]) ("Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [1366 1385]) ("assembly" variable (:type "String") (reparse-symbol formal_parameters) [1387 1402]))) (reparse-symbol class_member_declaration) [1347 1463]) ("Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("assembly" variable (:type "String") (reparse-symbol formal_parameters) [1488 1503]))) (reparse-symbol class_member_declaration) [1469 1552]) ("getAssembly" function (:typemodifiers ("public") :type "String") (reparse-symbol class_member_declaration) [1563 1615]) ("getAddressingMode" function (:typemodifiers ("public") :type "AddressingMode") (reparse-symbol class_member_declaration) [1621 1690]) ("execute" function (:typemodifiers ("public") :arguments (("operandData" variable (:type "int[]") (reparse-symbol formal_parameters) [1715 1732]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [1733 1746]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [1748 1767])) :type "int") (reparse-symbol class_member_declaration) [1696 1857]) ("isSingleByte" function (:typemodifiers ("public") :type "boolean") (reparse-symbol class_member_declaration) [1960 2011]) ("getFullAssemblyLine" function (:typemodifiers ("public") :arguments (("addressMode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [2050 2076]) ("operandData" variable (:type "int[]") (reparse-symbol formal_parameters) [2078 2095])) :type "String") (reparse-symbol class_member_declaration) [2016 2934]) ("toInt" function (:typemodifiers ("public" "static") :arguments (("lsb" variable (:type "int[]") (reparse-symbol formal_parameters) [2964 2973])) :type "int") (reparse-symbol class_member_declaration) [2940 3074]) ("hex" function (:typemodifiers ("public" "static") :arguments (("operandData" variable (:type "int[]") (reparse-symbol formal_parameters) [3104 3121])) :type "String") (reparse-symbol class_member_declaration) [3079 3274]) ("hex" function (:typemodifiers ("public" "static") :arguments (("val" variable (:type "int") (reparse-symbol formal_parameters) [3310 3317])) :type "String") (reparse-symbol class_member_declaration) [3285 3471])) :type "class") nil [154 3474]))
+    :file "Instruction.java"
+    :pointmax 3475
+    )
+   (semanticdb-table "MOS6502Emulator.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("java.io.BufferedReader" include nil nil [72 102]) ("java.util.Hashtable" include nil nil [103 130]) ("java.util.logging.Logger" include nil nil [131 163]) ("java.util.logging.Level" include nil nil [164 195]) ("MOS6502Emulator" type (:typemodifiers ("public") :members (("INITIAL_ADDRESS" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [268 317]) ("interruptsDisabled" variable (:typemodifiers ("private") :type "boolean") (reparse-symbol class_member_declaration) [590 625]) ("carryFlag" variable (:typemodifiers ("private") :type "boolean") (reparse-symbol class_member_declaration) [630 656]) ("decimalFlag" variable (:typemodifiers ("private") :type "boolean") (reparse-symbol class_member_declaration) [661 689]) ("zeroFlag" variable (:typemodifiers ("private") :type "boolean") (reparse-symbol class_member_declaration) [694 719]) ("signFlag" variable (:typemodifiers ("private") :type "boolean") (reparse-symbol class_member_declaration) [724 749]) ("STATUS_FLAG_CARRY" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [755 803]) ("STATUS_FLAG_ZERO" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [808 855]) ("STATUS_FLAG_INTERRUPT" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [860 912]) ("STATUS_FLAG_DECIMAL" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [917 967]) ("STATUS_FLAG_BREAK" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [972 1021]) ("STATUS_FLAG_OVERFLOW" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [1026 1078]) ("STATUS_FLAG_SIGN" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [1083 1132]) ("registers" variable (:typemodifiers ("private") :type "int[]") (reparse-symbol class_member_declaration) [1138 1202]) ("breakAddress" variable (:typemodifiers ("private") :type "int") (reparse-symbol class_member_declaration) [1208 1238]) ("shouldLog" variable (:type "boolean") (reparse-symbol class_member_declaration) [1240 1265]) ("logger" variable (:typemodifiers ("private") :type "Logger") (reparse-symbol class_member_declaration) [1327 1349]) ("memory" variable (:typemodifiers ("private") :type "Memory") (reparse-symbol class_member_declaration) [1354 1376]) ("MOS6502Emulator" function (:constructor-flag t :typemodifiers ("public")) (reparse-symbol class_member_declaration) [1381 1658]) ("setMemory" function (:typemodifiers ("public") :arguments (("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [1686 1699])) :type "void") (reparse-symbol class_member_declaration) [1664 1730]) ("setBreak" function (:typemodifiers ("public") :arguments (("address" variable (:type "int") (reparse-symbol formal_parameters) [1757 1768])) :type "void") (reparse-symbol class_member_declaration) [1736 1806]) ("run" function (:typemodifiers ("public") :type "void") (reparse-symbol class_member_declaration) [1812 8139]) ("clearRegisters" function (:typemodifiers ("private") :type "void") (reparse-symbol class_member_declaration) [8145 8265]) ("displayRegisters" function (:typemodifiers ("private") :type "void") (reparse-symbol class_member_declaration) [8271 8690]) ("readRegister" function (:typemodifiers ("public") :arguments (("rt" variable (:type "RegisterType") (reparse-symbol formal_parameters) [8720 8735])) :type "int") (reparse-symbol class_member_declaration) [8696 8878]) ("writeRegister" function (:typemodifiers ("public") :arguments (("rt" variable (:type "RegisterType") (reparse-symbol formal_parameters) [8910 8925]) ("value" variable (:type "int") (reparse-symbol formal_parameters) [8927 8936])) :type "void") (reparse-symbol class_member_declaration) [8884 9127]) ("setInterruptsDisabled" function (:typemodifiers ("public") :arguments (("disabled" variable (:type "boolean") (reparse-symbol formal_parameters) [9167 9183])) :type "void") (reparse-symbol class_member_declaration) [9133 9272]) ("setCarryFlag" function (:typemodifiers ("public") :arguments (("carry" variable (:type "boolean") (reparse-symbol formal_parameters) [9307 9320])) :type "void") (reparse-symbol class_member_declaration) [9282 9353]) ("getCarryFlag" function (:typemodifiers ("public") :type "boolean") (reparse-symbol class_member_declaration) [9359 9414]) ("setDecimalFlag" function (:typemodifiers ("public") :arguments (("decimal" variable (:type "boolean") (reparse-symbol formal_parameters) [9447 9462])) :type "void") (reparse-symbol class_member_declaration) [9420 9499]) ("getDecimalFlag" function (:typemodifiers ("public") :type "boolean") (reparse-symbol class_member_declaration) [9505 9564]) ("setZeroFlag" function (:typemodifiers ("public") :arguments (("zero" variable (:type "boolean") (reparse-symbol formal_parameters) [9594 9606])) :type "void") (reparse-symbol class_member_declaration) [9570 9637]) ("getZeroFlag" function (:typemodifiers ("public") :type "boolean") (reparse-symbol class_member_declaration) [9643 9696]) ("setSignFlag" function (:typemodifiers ("public") :arguments (("signed" variable (:type "boolean") (reparse-symbol formal_parameters) [9726 9740])) :type "void") (reparse-symbol class_member_declaration) [9702 9773]) ("getSignFlag" function (:typemodifiers ("public") :type "boolean") (reparse-symbol class_member_declaration) [9779 9832]) ("performBootupSequence" function (:typemodifiers ("protected") :type "void") (reparse-symbol class_member_declaration) [9838 9920])) :type "class") nil [233 9922]))
+    :file "MOS6502Emulator.java"
+    :pointmax 9923
+    )
+   (semanticdb-table "InstructionSet.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("java.util.Hashtable" include nil nil [32 59]) ("InstructionSet" type (:typemodifiers ("public") :members (("lookupTable" variable (:typemodifiers ("private" "static") :type "Instruction[]") (reparse-symbol class_member_declaration) [409 11799]) ("CLASS_MASK" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [11807 11848]) ("MODE_MASK" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [11879 11920]) ("INSTRUCTION_MASK" variable (:typemodifiers ("public" "static" "final") :type "int") (reparse-symbol class_member_declaration) [11925 11973]) ("getByOpCode" function (:typemodifiers ("public" "static") :arguments (("opcode" variable (:type "int") (reparse-symbol formal_parameters) [12017 12027])) :type "Instruction") (reparse-symbol class_member_declaration) [11979 12064]) ("getAddressingMode" function (:typemodifiers ("public" "static") :arguments (("opcode" variable (:type "int") (reparse-symbol formal_parameters) [15341 15351])) :type "Instruction.AddressingMode") (reparse-symbol class_member_declaration) [15282 17147])) :type "class") nil [270 17150]))
+    :file "InstructionSet.java"
+    :pointmax 17151
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "SingleByteInstruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("SingleByteInstruction" type (:typemodifiers ("public" "abstract") :superclasses "Instruction" :members (("SingleByteInstruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [131 150]) ("name" variable (:type "String") (reparse-symbol formal_parameters) [152 163]))) (reparse-symbol class_member_declaration) [102 195]) ("isSingleByte" function (:typemodifiers ("public") :type "boolean") (reparse-symbol class_member_declaration) [201 251])) :type "class") nil [32 253]))
+    :file "SingleByteInstruction.java"
+    :pointmax 254
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "SEI_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("NOP_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("NOP_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [181 200]))) (reparse-symbol class_member_declaration) [158 229]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [255 269]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [271 284]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [286 305])) :type "void") (reparse-symbol class_member_declaration) [235 328])) :type "class") nil [93 330]))
+    :file "SEI_Instruction.java"
+    :pointmax 444
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "TXA_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("TXA_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("TXA_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [200 219]))) (reparse-symbol class_member_declaration) [177 248]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [274 288]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [290 303]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [305 324])) :type "void") (reparse-symbol class_member_declaration) [254 443])) :type "class") nil [112 445]))
+    :file "TXA_Instruction.java"
+    :pointmax 446
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "TXS_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("TXS_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("TXS_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [203 222]))) (reparse-symbol class_member_declaration) [180 251]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [277 291]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [293 306]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [308 327])) :type "void") (reparse-symbol class_member_declaration) [257 448])) :type "class") nil [115 450]))
+    :file "TXS_Instruction.java"
+    :pointmax 451
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "TSX_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("TSX_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("TSX_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [160 179]))) (reparse-symbol class_member_declaration) [137 208])) :type "class") nil [72 210]))
+    :file "TSX_Instruction.java"
+    :pointmax 211
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "StackOverflowException.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("StackOverflowException" type (:typemodifiers ("public") :superclasses "InstructionException" :members (("StackOverflowException" function (:constructor-flag t :typemodifiers ("public")) (reparse-symbol class_member_declaration) [103 151])) :type "class") nil [32 153]))
+    :file "StackOverflowException.java"
+    :pointmax 154
+    )
+   (semanticdb-table "InstructionException.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("InstructionException" type (:typemodifiers ("public") :superclasses "RuntimeException" :members (("InstructionException" function (:constructor-flag t :typemodifiers ("public")) (reparse-symbol class_member_declaration) [96 142])) :type "class") nil [32 144]))
+    :file "InstructionException.java"
+    :pointmax 145
+    )
+   (semanticdb-table "TAX_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("TAX_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("TAX_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [216 235]))) (reparse-symbol class_member_declaration) [193 264]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [290 304]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [306 319]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [321 340])) :type "void") (reparse-symbol class_member_declaration) [270 548])) :type "class") nil [128 550]))
+    :file "TAX_Instruction.java"
+    :pointmax 551
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "DEX_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("DEX_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("DEX_Instruction" function (:constructor-flag t :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [177 196]))) (reparse-symbol class_member_declaration) [161 225]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [251 265]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [267 280]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [282 301])) :type "void") (reparse-symbol class_member_declaration) [231 487])) :type "class") nil [106 489]))
+    :file "DEX_Instruction.java"
+    :pointmax 490
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "CLD_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("CLD_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("CLD_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [190 209]))) (reparse-symbol class_member_declaration) [167 238]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [264 278]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [280 293]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [295 314])) :type "void") (reparse-symbol class_member_declaration) [244 350])) :type "class") nil [102 352]))
+    :file "CLD_Instruction.java"
+    :pointmax 353
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "DEY_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("DEY_Instruction" type (:typemodifiers ("public") :superclasses "Instruction" :members (("DEY_Instruction" function (:constructor-flag t :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [177 196]))) (reparse-symbol class_member_declaration) [161 225]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [251 265]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [267 280]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [282 301])) :type "void") (reparse-symbol class_member_declaration) [231 497])) :type "class") nil [106 499]))
+    :file "DEY_Instruction.java"
+    :pointmax 500
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "TAY_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("TAY_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("TAY_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [216 235]))) (reparse-symbol class_member_declaration) [193 264]) ("execute" function (:typemodifiers ("public") :arguments (("operands" variable (:type "int[]") (reparse-symbol formal_parameters) [290 304]) ("memory" variable (:type "Memory") (reparse-symbol formal_parameters) [306 319]) ("cpu" variable (:type "MOS6502Emulator") (reparse-symbol formal_parameters) [321 340])) :type "void") (reparse-symbol class_member_declaration) [270 548])) :type "class") nil [128 550]))
+    :file "TAY_Instruction.java"
+    :pointmax 551
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "NOP_Instruction.java"
+    :major-mode 'java-mode
+    :tags 'nil
+    :file "NOP_Instruction.java"
+    :pointmax 331
+    )
+   (semanticdb-table "SED_Instruction.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.cpu" package nil nil [1 30]) ("org.fortytwo.c64.memory.Memory" include nil nil [32 70]) ("SED_Instruction" type (:typemodifiers ("public") :superclasses "SingleByteInstruction" :members (("SED_Instruction" function (:constructor-flag t :typemodifiers ("public") :arguments (("mode" variable (:type "AddressingMode") (reparse-symbol formal_parameters) [199 218]))) (reparse-symbol class_member_declaration) [176 247])) :type "class") nil [111 457]))
+    :file "SED_Instruction.java"
+    :pointmax 458
+    )
+   )
+  :file "semantic.cache"
+  :semantic-tag-version "2.0beta3"
+  :semanticdb-version "2.0beta3"
+  )

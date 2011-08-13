@@ -1,0 +1,13 @@
+- think about putting operands and entire instruction into integer (which is 32 bits and so is quite plenty). This way we don't have to muck around with arrays
+- should have one CIA.java with two instances
+- CPUTimed interface (handleCycle())
+- InstructionSet has array of cycle times 
+- CPU should have an interrupt() method
+- CPU should have nonMaskableInterrupt() method
+- write a test for the Screen codes (go through the char rom and output everything)
+- need to do addresses on stack in the same way that the real one does because it seems to be screwing with some of the methods
+- move AddressingMode handling to InstructionSet or Instruction
+- Have a MemoryBus? so that VIC can see different memory from others
+- RAM and ROM should just be implementations of Memory (or
+- ReadOnlyMemory and WriteableMemory)
+- Add a save/restore state option

@@ -1,0 +1,1549 @@
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Add memory to accumulator with carry
+ */
+public class ADC_Instruction extends Instruction
+{
+
+    int cycles;
+    ADC_Instruction(AddressingMode mode){
+	super(mode,"ADC");
+	
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 4; break;
+	case IndexedY: cycles = 4; break; // supposed to add 1 if boundary crossed
+	case PreIndexedIndirect: cycles = 6; break;
+	case PostIndexedIndirect: cycles = 5; break; // supposed to add 1 if boundary crossed
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = toInt(operands);
+	if (getAddressingMode() != AddressingMode.Immediate){
+	    val = memory.read(val);
+	}
+
+	int accum = cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	if (cpu.getCarryFlag()){
+	    accum = accum + 1;
+	}
+	int newVal = accum + val;
+	cpu.setOverflowFlag(accum > 127 || accum < -128);
+	cpu.setCarryFlag((accum & 0x100) != 0);
+	cpu.setSignFlag((accum & 0x80) != 0);
+	cpu.setZeroFlag((accum & 0xFF) == 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator,newVal & 0xFF);
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * "And" memory with accumulator
+ */
+public class AND_Instruction extends Instruction
+{
+    int cycles;
+    public AND_Instruction(AddressingMode mode){
+	super(mode, "AND");
+
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 4; break;
+	case IndexedY: cycles = 4; break; // supposed to add 1 if boundary crossed
+	case PreIndexedIndirect: cycles = 6; break;
+	case PostIndexedIndirect: cycles = 5; break; 
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int accum = cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	int value = 0;
+	if (getAddressingMode() == AddressingMode.Immediate){
+	    value = accum & toInt(operands);
+	}
+	else {
+	    value = accum & memory.read(toInt(operands));
+	}
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator,value);
+	cpu.setSignFlag((value & 0x80) != 0);
+	cpu.setZeroFlag((value & 0xFF) == 0);
+	return cycles;
+    }
+
+
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Shift Left One Bit (Memory or Accumulator)
+ */
+public class ASL_Instruction extends Instruction
+{
+
+    int cycles;
+    public ASL_Instruction(AddressingMode mode){
+	super(mode, "ASL");
+
+	switch (mode){
+	case Accumulator: cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 5; break;
+	case ZeroPageIndexedX: cycles = 6; break;
+	case Absolute: cycles = 6; break;
+	case IndexedX: cycles = 7; break;
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (getAddressingMode() == AddressingMode.Accumulator){
+	    int accum = 0xFF & cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	    cpu.setCarryFlag(((accum & 0x80) != 0));
+	    accum = accum << 1;
+	    cpu.setZeroFlag((accum & 0xFF) == 0);
+	    cpu.setSignFlag((accum & 0x80) != 0);
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator, 0xFF & accum);
+
+	}
+	else {
+	    int val= 0xFF & memory.read(toInt(operands));
+	    //cpu.setCarryFlag(((val & 0x80) != 0));
+	    val = val << 1;
+	    //cpu.setZeroFlag((val & 0xFF) == 0);
+	    //cpu.setSignFlag((val & 0x80) != 0);
+	    memory.write(toInt(operands), (byte)val);
+	}
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Conditional
+ */
+public class BCC_Instruction extends Instruction
+{
+    int cycles;
+    public BCC_Instruction(AddressingMode mode){
+	super(mode, "BCC");
+	
+	switch (mode){
+	case Relative: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Relative mode is supported!");
+	}
+
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (! cpu.getCarryFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter,toInt(operands));
+	}
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Conditional
+ */
+public class BCS_Instruction extends Instruction
+{
+    int cycles;
+    BCS_Instruction(AddressingMode mode){
+	super(mode, "BCS");
+
+	switch (mode){
+	case Relative: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Relative mode supported!");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (cpu.getCarryFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter,toInt(operands));
+	}
+	return cycles;
+    }
+}
+
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Conditional
+ */
+public class BEQ_Instruction extends Instruction
+{
+    int cycles;
+    public BEQ_Instruction(AddressingMode mode){
+	super(mode, "BEQ");
+	
+	switch (mode){
+	case Relative: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Relative mode supported!");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (cpu.getZeroFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter,toInt(operands));
+	}
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Test bits in memory with accumulator
+ */
+public class BIT_Instruction extends Instruction
+{
+    public BIT_Instruction(AddressingMode mode){
+	super(mode, "BIT");
+
+	switch (mode){
+	case ZeroPageAbsolute: cycles = 3;break;
+	case Absolute: cycles = 4; break;
+	default: throw new IllegalArgumentException("Mode not supported; " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = 0xFF & memory.read(toInt(operands));
+	val = val & cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	cpu.setZeroFlag(val == 0);
+	cpu.setOverflowFlag((val & 0x40) != 0); // bit 6
+	cpu.setSignFlag((val & 0x80) != 0); // bit 7
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Branch on result minus
+ */
+public class BMI_Instruction extends Instruction
+{
+    int cycles;
+    public BMI_Instruction(AddressingMode mode){
+	super(mode, "BMI");
+	switch (mode){
+	case Relative: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Relative mode supported!");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (cpu.getSignFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter, toInt(operands));
+	}
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Branch to the address given by the operand if the zero flag is not set
+ */
+public class BNE_Instruction extends Instruction
+{
+    int cycles;
+    public BNE_Instruction(AddressingMode mode){
+	super(mode, "BNE");
+	switch (mode){
+	case Relative: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Relative mode supported!");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (! cpu.getZeroFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter,toInt(operands));
+	}
+	return cycles;
+    }
+    
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Conditional
+ */
+public class BPL_Instruction extends Instruction
+{
+    public BPL_Instruction(AddressingMode mode){
+	super(mode, "BPL");
+	switch (mode){
+	case Relative: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Relative mode supported!");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (! cpu.getSignFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter,toInt(operands));
+	}
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+public class BRK_Instruction extends SingleByteInstruction
+{
+    public BRK_Instruction(AddressingMode mode){
+	super(mode, "BRK");
+    }
+
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Conditional
+ */
+public class BVC_Instruction extends Instruction
+{
+    public BVC_Instruction(AddressingMode mode){
+	super(mode, "BVC");
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (! cpu.getOverflowFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter, toInt(operands));
+	}
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Conditional
+ */
+public class BVS_Instruction extends Instruction
+{
+    public BVS_Instruction(AddressingMode mode){
+	super(mode, "BVS");
+
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if ( cpu.getOverflowFlag()){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter, toInt(operands));
+	}
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Clear Carry Flag
+ */
+public class CLC_Instruction extends SingleByteInstruction
+{
+    public CLC_Instruction(AddressingMode mode){
+	super(mode, "CLC");
+	
+	switch (mode){
+	case Implied: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Implied mode supported!");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.setCarryFlag(false);
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Clear decimal flag
+ */
+public class CLD_Instruction extends SingleByteInstruction
+{
+    public CLD_Instruction(AddressingMode mode){
+	super(mode, "CLD");
+	switch (mode){
+	case Implied: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Implied mode supported!");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.setDecimalFlag(false);
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Clear Interrupt Disable Bit
+ */
+public class CLI_Instruction extends SingleByteInstruction
+{
+    public CLI_Instruction(AddressingMode mode){
+	super(mode, "CLI");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.setInterruptsDisabled(false);
+	return 2;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Clear Overflow Flag
+ */
+public class CLV_Instruction extends SingleByteInstruction
+{
+    public CLV_Instruction(AddressingMode mode){
+	super(mode, "CLV");
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.setOverflowFlag(false);
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Compare memory and accumulator
+ */
+public class CMP_Instruction extends Instruction
+{
+
+    public CMP_Instruction(AddressingMode mode){
+	super(mode, "CMP");
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 4; break;
+	case IndexedY: cycles = 4; break; // supposed to add 1 if boundary crossed
+	case PreIndexedIndirect: cycles = 6; break;
+	case PostIndexedIndirect: cycles = 5; break; 
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+
+    }
+
+    public int execute(int operands[], Memory memory, MOS6502Emulator cpu){
+	int val = toInt(operands);
+	if (getAddressingMode() != AddressingMode.Immediate){
+	    val = memory.read(val); // assume it's an address
+	}
+	int accum = 0xFF & cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	cpu.setCarryFlag(Math.abs(accum) < Math.abs(val));
+	cpu.setSignFlag(val > accum);
+	cpu.setZeroFlag((val & 0xFF) == accum);
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Compare memory and index X
+ */
+public class CPX_Instruction extends Instruction
+{
+    public CPX_Instruction(AddressingMode mode){
+	super(mode, "CPX");
+
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case Absolute: cycles = 4; break;
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = 0xFF & memory.read(toInt(operands));
+	int x = 0xFF & cpu.readRegister(MOS6502Emulator.RegisterType.X);
+	cpu.setCarryFlag(Math.abs(x) < Math.abs(val));
+	cpu.setSignFlag(val > x);
+	cpu.setZeroFlag(val == x);
+	return cycles;
+    }    
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Compare memory and index Y
+ */
+public class CPY_Instruction extends Instruction
+{
+    public CPY_Instruction(AddressingMode mode){
+	super(mode, "CPY");
+
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case Absolute: cycles = 4; break;
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = 0xFF & memory.read(toInt(operands));
+	int y = 0xFF & cpu.readRegister(MOS6502Emulator.RegisterType.Y);
+	cpu.setCarryFlag(Math.abs(y) < Math.abs(val));
+	cpu.setSignFlag(val > y);
+	cpu.setZeroFlag(val == y);
+
+	return cycles;
+    }    
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Decrement memory by one
+ */
+public class DEC_Instruction extends Instruction
+{
+    public DEC_Instruction(AddressingMode mode){
+	    super(mode, "DEC");
+	switch (mode){
+
+	case ZeroPageAbsolute: cycles = 5; break;
+	case ZeroPageIndexedX: cycles = 6; break; 
+	case Absolute: cycles = 6; break;
+	case IndexedX: cycles = 7; break; 
+	default: throw new IllegalArgumentException("Mode note supported: " + mode);
+	}
+    }
+
+   public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int addr = toInt(operands);
+	int val = memory.read(addr);
+	val = (val - 1) & 0xFF;
+	cpu.setSignFlag((val & 0x80) != 0);
+	cpu.setZeroFlag(val == 0);
+	memory.write(addr, (byte)(0xFF & val));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Decrement index X by 1
+ */
+public class DEX_Instruction extends Instruction
+{
+    DEX_Instruction(AddressingMode mode){
+	super(mode, "DEX");
+
+	switch (mode){
+	case Implied: cycles = 2; break;
+	default: throw new IllegalArgumentException("Mode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int x = cpu.readRegister(MOS6502Emulator.RegisterType.X);
+	x = (x - 1) & 0xFF;
+	cpu.setZeroFlag(x == 0);
+	cpu.setSignFlag((x & 0x80) != 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.X, (byte)(x & 0xFF));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Decrement index Y by 1
+ */
+public class DEY_Instruction extends Instruction
+{
+    DEY_Instruction(AddressingMode mode){
+	super(mode, "DEY");
+	switch (mode){
+	case Implied: cycles = 2; break;
+	default: throw new IllegalArgumentException("Mode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int y = cpu.readRegister(MOS6502Emulator.RegisterType.Y);
+	y = (y - 1) & 0xFF;
+	cpu.setZeroFlag(y == 0);
+	cpu.setSignFlag((y & 0x80) != 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.Y, y & 0xFF);
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+/**
+ * "XOR" memory with accumulator
+ */
+public class EOR_Instruction extends Instruction
+{
+    public EOR_Instruction(AddressingMode mode){
+	super(mode, "EOR");
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Increment memory by one
+ */
+public class INC_Instruction extends Instruction
+{
+    public INC_Instruction(AddressingMode mode){
+	super(mode, "INC");
+
+	switch (mode){
+
+	case ZeroPageAbsolute: cycles = 5; break;
+	case ZeroPageIndexedX: cycles = 6; break; 
+	case Absolute: cycles = 6; break;
+	case IndexedX: cycles = 7; break; 
+	default: throw new IllegalArgumentException("Mode note supported: " + mode);
+	}
+
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int addr = toInt(operands);
+	int val = memory.read(addr);
+	val = (val + 1) & 0xFF;
+	cpu.setSignFlag((val & 0x80) != 0);
+	cpu.setZeroFlag(val == 0);
+	memory.write(addr, (byte)(val & 0xFF));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Increment index X by one
+ */
+public class INX_Instruction extends SingleByteInstruction
+{
+    public INX_Instruction(AddressingMode mode){
+	super(mode, "INX");
+
+	switch (mode){
+	case Implied: cycles = 2; break;
+	default: throw new IllegalArgumentException("Mode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int x = cpu.readRegister(MOS6502Emulator.RegisterType.X);
+	x = (x + 1) & 0xFF;
+	cpu.setZeroFlag(x == 0);
+	cpu.setSignFlag((x & 0x80) != 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.X,x);
+
+	return cycles;
+    }    
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Increment index Y by one
+ */
+public class INY_Instruction extends SingleByteInstruction
+{
+    public INY_Instruction(AddressingMode mode){
+	super(mode, "INY");
+
+	switch (mode){
+	case Implied: cycles = 2; break;
+	default: throw new IllegalArgumentException("Mode not supported: " + mode);
+	}
+    }
+
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int y = cpu.readRegister(MOS6502Emulator.RegisterType.Y);
+	y = (y + 1) & 255;
+	cpu.setZeroFlag(y == 0);
+	cpu.setSignFlag((y & 0x80) != 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.Y,y);
+
+	return cycles;
+    }    
+}
+
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Jump to memory location
+ */
+public class JMP_Instruction extends Instruction
+{
+    public JMP_Instruction(AddressingMode mode){
+	super(mode, "JMP");
+
+	switch (mode){
+	case Absolute: cycles = 3; break;
+	case Indirect: cycles = 5; break;
+	default: throw new IllegalArgumentException("Mode note supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter,toInt(operands));
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Jump to new location, saving return address
+ */
+public class JSR_Instruction extends Instruction
+{
+    public JSR_Instruction(AddressingMode mode){
+	super(mode, "JSR");
+
+	switch (mode){
+	case Absolute: cycles = 2; break;
+	default: throw new IllegalArgumentException("Only Absolute mode is supported");
+	}
+    }
+
+    // stack is in page 1
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int pc = cpu.readRegister(MOS6502Emulator.RegisterType.programCounter);
+	int sp = cpu.readRegister(MOS6502Emulator.RegisterType.stackPointer);
+	if (sp == 0){
+	    throw new StackOverflowException();
+	}
+	sp--; // go up one so that we can write out our stack
+	memory.writeWord(sp | 0x100, pc);
+	//	System.out.println("Saved " + Integer.toHexString(pc) + " to stack");
+	sp--;
+	//sp -= 2;
+	/*
+	memory.write(sp | 0x100, (byte)((pc >> 8) & 0xFF)); // hibyte
+	sp--;
+	memory.write(sp | 0x100, (byte)(pc & 0x00FF)); // lowbyte
+	sp--; // stack points to the next empty spot
+	*/
+	cpu.writeRegister(MOS6502Emulator.RegisterType.stackPointer, sp);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter,(0xFF & operands[0]) | ((0xFF & operands[1]) << 8));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Load accumulator with memory
+ */
+public class LDA_Instruction extends Instruction
+{
+
+
+    LDA_Instruction(AddressingMode mode){
+	super(mode,"LDA");
+
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 4; break;
+	case IndexedY: cycles = 4; break; // supposed to add 1 if boundary crossed
+	case PreIndexedIndirect: cycles = 6; break;
+	case PostIndexedIndirect: cycles = 5; break; 
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = toInt(operands);
+	if (getAddressingMode() != AddressingMode.Immediate) { // memory
+	    val = memory.read(val);
+	}
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator, 0xFF & val);
+	cpu.setZeroFlag((val & 0xFF) == 0);
+	cpu.setSignFlag((val & 0x80) != 0);
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Load index X with Memory
+ */
+public class LDX_Instruction extends Instruction
+{
+    public LDX_Instruction(AddressingMode mode){
+	super(mode, "LDX");
+
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedY: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedY: cycles = 4; break; // supposed to add 1 if boundary crossed
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = toInt(operands);
+	if (getAddressingMode() != AddressingMode.Immediate){
+	    val = 0xFF & memory.read(val);
+	}
+	cpu.setZeroFlag((val & 0xFF) == 0);
+	cpu.setSignFlag((val & 0x80) != 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.X,val);
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Load Index Y from memory
+ */
+public class LDY_Instruction extends Instruction
+{
+    public LDY_Instruction(AddressingMode mode){
+	super(mode, "LDY");
+
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 4; break;
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = toInt(operands);
+	if (getAddressingMode() != AddressingMode.Immediate){
+	    val = 0xFF & memory.read(val);
+	}
+	cpu.setZeroFlag((val & 0xFF) == 0);
+	cpu.setSignFlag((val & 0x80) != 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.Y,0xFF & val);
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Shift Right One Bit (Memory or Accumulator)
+ */
+public class LSR_Instruction extends Instruction
+{
+    public LSR_Instruction(AddressingMode mode){
+	super(mode, "LSR");
+
+
+	switch (mode){
+	case Accumulator: cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 5; break;
+	case ZeroPageIndexedX: cycles = 6; break;
+	case Absolute: cycles = 6; break;
+	case IndexedX: cycles = 7; break;
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+   public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	if (getAddressingMode() == AddressingMode.Accumulator){
+	    int accum = 0xFF & cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	    cpu.setCarryFlag(((accum & 0x01) != 0));
+	    accum = accum >> 1;
+	    cpu.setZeroFlag((accum & 0xFF) == 0);
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator, 0xFF & accum);
+
+	}
+	else {
+	    int val= 0xFF & memory.read(toInt(operands));
+	    cpu.setCarryFlag(((val & 0x01) != 0));
+	    val = val >> 1;
+	    cpu.setZeroFlag((val & 0xFF) == 0);
+	    memory.write(toInt(operands), (byte)val);
+	}
+	cpu.setSignFlag(false);
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Do nothing
+ */
+public class NOP_Instruction extends SingleByteInstruction
+{
+    public NOP_Instruction(AddressingMode mode){
+	super(mode, "NOP");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	return 2;
+	// do nothing
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Does a logical "OR" of memory with accumulator and stores in the accumulator
+ */
+public class ORA_Instruction extends Instruction
+{
+    ORA_Instruction(AddressingMode mode){
+	super(mode, "ORA");
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 4; break;
+	case IndexedY: cycles = 4; break; // supposed to add 1 if boundary crossed
+	case PreIndexedIndirect: cycles = 6; break;
+	case PostIndexedIndirect: cycles = 5; break; 
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int accum = cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	int value = accum | toInt(operands);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator,value);
+	cpu.setSignFlag((value & 0x80) != 0);
+	cpu.setZeroFlag(value == 0);
+	return cycles;
+    }	
+
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Push Accumulator on Stack
+ */
+public class PHA_Instruction extends SingleByteInstruction
+{
+    public PHA_Instruction(AddressingMode mode){
+	super(mode, "PHA");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.pushStack((byte)cpu.readRegister(MOS6502Emulator.RegisterType.accumulator));
+	return 3;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Pull Accumulator from stack
+ */
+public class PHP_Instruction extends SingleByteInstruction
+{
+    public PHP_Instruction(AddressingMode mode){
+	super(mode, "PHP");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int status = cpu.getCarryFlag() ? MOS6502Emulator.STATUS_FLAG_CARRY : 0x00;
+	status |= cpu.getZeroFlag() ? MOS6502Emulator.STATUS_FLAG_ZERO : 0x00;
+	status |= cpu.getDecimalFlag() ? MOS6502Emulator.STATUS_FLAG_DECIMAL : 0x00;
+	status |= cpu.getSignFlag() ? MOS6502Emulator.STATUS_FLAG_SIGN : 0x00;
+	status |= cpu.getOverflowFlag() ? MOS6502Emulator.STATUS_FLAG_OVERFLOW : 0x00;
+	cpu.pushStack((byte)status);
+
+	return 3;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Pull Accumulator from stack
+ */
+public class PLA_Instruction extends SingleByteInstruction
+{
+    public PLA_Instruction(AddressingMode mode){
+	super(mode, "PLA");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator, cpu.popStack());
+	return 3;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Pull Accumulator from stack
+ */
+public class PLP_Instruction extends SingleByteInstruction
+{
+    public PLP_Instruction(AddressingMode mode){
+	super(mode, "PLP");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int status = cpu.popStack();
+	cpu.writeRegister(MOS6502Emulator.RegisterType.status, status);
+	return 3;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Rotate One Bit left (Memory or Accumulator)
+ */
+public class ROL_Instruction extends Instruction
+{
+    public ROL_Instruction(AddressingMode mode){
+	super(mode, "ROL");
+
+	switch (mode){
+	case Accumulator: cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 5; break;
+	case ZeroPageIndexedX: cycles = 6; break;
+	case Absolute: cycles = 6; break;
+	case IndexedX: cycles = 7; break;
+	default: throw new IllegalArgumentException("Invalid mode: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = 0;
+	if (getAddressingMode() == AddressingMode.Accumulator){ // accumulator
+	    val = 0xFF & cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	}
+	else {
+	    val = 0xFF & memory.read(toInt(operands));
+	}
+	int oldval = val;
+	val = val << 1;
+	if (cpu.getCarryFlag()){
+	    val |= 0x1; // bring over the previous carry
+	}
+	cpu.setCarryFlag((oldval & 0x80) != 0);
+	cpu.setSignFlag((val & 0x80) != 0);
+	cpu.setZeroFlag((val & 0xFF) == 0);
+	
+	if (getAddressingMode() == AddressingMode.Accumulator){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator, (val & 0xFF));
+	}
+	else {
+	    memory.write(toInt(operands),(byte)(val & 0xFF));
+	}
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Rotate One Bit Right (Memory or Accumulator)
+ */
+public class ROR_Instruction extends Instruction
+{
+    public ROR_Instruction(AddressingMode mode){
+	super(mode, "ROR");
+
+	switch (mode){
+	case Accumulator: cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 5; break;
+	case ZeroPageIndexedX: cycles = 6; break;
+	case Absolute: cycles = 6; break;
+	case IndexedX: cycles = 7; break;
+	default: throw new IllegalArgumentException("Invalid mode: " + mode);
+	}
+    }
+
+   public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = 0;
+	if (getAddressingMode() == AddressingMode.Accumulator){ // accumulator
+	    val = cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	}
+	else {
+	    val = memory.read(toInt(operands));
+	}
+	int oldval = val;
+	if (cpu.getCarryFlag()){
+	    val |= 0x100; // bring over the previous carry
+	}
+	cpu.setCarryFlag((val & 0x01) != 0);
+	val = val >> 1;
+	cpu.setSignFlag((val & 0x80) != 0);
+	cpu.setZeroFlag((val & 0xFF) == 0);
+	
+	if (getAddressingMode() == AddressingMode.Accumulator){
+	    cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator,val & 0xFF);
+	}
+	else {
+	    memory.write(toInt(operands),(byte)(val & 0xFF));
+	}
+
+	return cycles;
+
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Return from interrupt
+ */
+public class RTI_Instruction extends SingleByteInstruction
+{
+    public RTI_Instruction(AddressingMode mode){
+	super(mode, "RTI");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int status = cpu.popStack();
+	cpu.writeRegister(MOS6502Emulator.RegisterType.status, status);
+	int sp = cpu.readRegister(MOS6502Emulator.RegisterType.stackPointer);
+
+	sp++;
+	cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter, memory.readWord(sp | 0x100));
+	sp++;
+	cpu.writeRegister(MOS6502Emulator.RegisterType.stackPointer, sp);
+
+	return 3;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Return from subroutine
+ */
+public class RTS_Instruction extends SingleByteInstruction
+{
+    public RTS_Instruction(AddressingMode mode){
+	super(mode, "RTS");
+
+	switch (mode){
+	case Implied: cycles = 6; break;
+	default: throw new IllegalArgumentException("Only Implied mode is supported");
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int sp = cpu.readRegister(MOS6502Emulator.RegisterType.stackPointer);
+	sp++;
+	int returnAddress = memory.readWord(sp | 0x100);
+	//	System.out.println("Got " + Integer.toHexString(returnAddress) + " from stack");
+	sp++;
+	cpu.writeRegister(MOS6502Emulator.RegisterType.stackPointer, sp);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.programCounter, returnAddress);
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Subtract memory from accumulator with borrow
+ */
+public class SBC_Instruction extends Instruction
+{
+    public SBC_Instruction(AddressingMode mode){
+	super(mode, "SBC");
+
+	switch (mode){
+	case Immediate:cycles = 2; break;
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 4; break;
+	case IndexedY: cycles = 4; break; // supposed to add 1 if boundary crossed
+	case PreIndexedIndirect: cycles = 6; break;
+	case PostIndexedIndirect: cycles = 5; break; // supposed to add 1 if boundary crossed
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+   public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int val = toInt(operands);
+	if (getAddressingMode() != AddressingMode.Immediate){
+	    val = memory.read(val);
+	}
+
+	int accum = cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	int newVal = accum - val - (cpu.getCarryFlag() ? 0 : 1);
+	cpu.setSignFlag((accum & 0x80) != 0);
+	cpu.setZeroFlag((accum & 0xFF) == 0);
+	cpu.setOverflowFlag(((accum ^ newVal) & 0x80) != 0 && ((accum ^ val) & 80) != 0); // copied from elsewhere, I should do the math
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator,newVal & 0xFF);
+
+	return cycles;
+    }
+
+    
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Set Carry Flag
+ */
+public class SEC_Instruction extends SingleByteInstruction
+{
+    public SEC_Instruction(AddressingMode mode){
+	super(mode, "SEC");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.setCarryFlag(true);
+	return 2;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Set Interrupt Disable Status
+ */
+public class SED_Instruction extends SingleByteInstruction
+{
+    public SED_Instruction(AddressingMode mode){
+	super(mode, "SED");
+    }
+
+    /*
+    public void execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	// this is currently going to not optimal, but we'll optimize as necessary
+	cpu.setInterruptsDisabled(true);
+    }
+    */
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Set Interrupt Disable Status
+ */
+public class SEI_Instruction extends SingleByteInstruction
+{
+    public SEI_Instruction(AddressingMode mode){
+	super(mode, "SEI");
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	// this is currently going to not optimal, but we'll optimize as necessary
+	cpu.setInterruptsDisabled(true);
+
+	return 2;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Store accumulator in memory
+ */
+public class STA_Instruction extends Instruction
+{
+
+    STA_Instruction(AddressingMode mode){
+	super(mode, "STA");
+
+	switch (mode){
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	case IndexedX: cycles = 5; break;
+	case IndexedY: cycles = 5; break; 
+	case PreIndexedIndirect: cycles = 6; break;
+	case PostIndexedIndirect: cycles = 7; break; 
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	memory.write(toInt(operands), (byte)cpu.readRegister(MOS6502Emulator.RegisterType.accumulator));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Store index X in memory
+ */
+public class STX_Instruction extends Instruction
+{
+    public STX_Instruction(AddressingMode mode){
+	super(mode, "STX");
+
+
+	switch (mode){
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedY: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	memory.write(toInt(operands), (byte)cpu.readRegister(MOS6502Emulator.RegisterType.X));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Store index Y in memory
+ */
+public class STY_Instruction extends Instruction
+{
+    public STY_Instruction(AddressingMode mode){
+	super(mode, "STY");
+
+	switch (mode){
+	case ZeroPageAbsolute: cycles = 3; break;
+	case ZeroPageIndexedX: cycles = 4; break;
+	case Absolute: cycles = 4; break;
+	default: throw new IllegalArgumentException("AddressMode not supported: " + mode);
+	}
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	memory.write(toInt(operands), (byte)cpu.readRegister(MOS6502Emulator.RegisterType.Y));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Transfer accumulator contents to X-registers
+ */
+public class TAX_Instruction extends SingleByteInstruction
+{
+    public TAX_Instruction(AddressingMode mode){
+	super(mode, "TAX");
+
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int accum = cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	cpu.setSignFlag((accum & 0x80) != 0);
+	cpu.setZeroFlag((0xFF & accum) == 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.X,accum);
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Transfer accumulator contents to Y-registers
+ */
+public class TAY_Instruction extends SingleByteInstruction
+{
+    public TAY_Instruction(AddressingMode mode){
+	super(mode, "TAY");
+
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int accum = cpu.readRegister(MOS6502Emulator.RegisterType.accumulator);
+	cpu.setSignFlag((accum & 0x80) != 0);
+	cpu.setZeroFlag((0xFF & accum) == 0);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.Y,accum);
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+/**
+ * Transfer stack pointer to index X
+ */
+public class TSX_Instruction extends SingleByteInstruction
+{
+    public TSX_Instruction(AddressingMode mode){
+	super(mode, "TSX");
+	cycles = 2;
+    }
+
+  public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+      int sp = cpu.readRegister(MOS6502Emulator.RegisterType.stackPointer);
+      cpu.writeRegister(MOS6502Emulator.RegisterType.X, 0xFF & sp);
+      cpu.setSignFlag((sp & 0x80) != 0);
+      cpu.setZeroFlag((sp & 0xFF) == 0);
+      return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Transfer index X to accumulator
+ */
+public class TXA_Instruction extends SingleByteInstruction
+{
+    public TXA_Instruction(AddressingMode mode){
+	super(mode, "TXA");
+
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int X = cpu.readRegister(MOS6502Emulator.RegisterType.X);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator, X & 0xFF);
+	cpu.setSignFlag((X & 0x80) != 0);
+	cpu.setZeroFlag((X & 0XFF) == 0);
+	
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Initialize stack pointer from X
+ */
+public class TXS_Instruction extends SingleByteInstruction
+{
+    public TXS_Instruction(AddressingMode mode){
+	super(mode, "TXS");
+
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	cpu.writeRegister(MOS6502Emulator.RegisterType.stackPointer, cpu.readRegister(MOS6502Emulator.RegisterType.X));
+
+	return cycles;
+    }
+}
+package org.fortytwo.c64.cpu;
+
+import org.fortytwo.c64.memory.Memory;
+
+/**
+ * Transfer index Y to Accumulator
+ */
+public class TYA_Instruction extends SingleByteInstruction
+{
+    public TYA_Instruction(AddressingMode mode){
+	super(mode, "TYA");
+
+	cycles = 2;
+    }
+
+    public int execute(int[] operands, Memory memory, MOS6502Emulator cpu){
+	int Y = 0xFF & cpu.readRegister(MOS6502Emulator.RegisterType.Y);
+	cpu.writeRegister(MOS6502Emulator.RegisterType.accumulator,Y);
+	cpu.setSignFlag((Y & 0x80) != 0);
+	cpu.setZeroFlag(Y == 0);
+	
+	return cycles;
+    }
+    
+}

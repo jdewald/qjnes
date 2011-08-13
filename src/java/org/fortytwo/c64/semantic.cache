@@ -1,0 +1,15 @@
+;; Object c64/
+;; SEMANTICDB Tags save file
+(semanticdb-project-database-file "c64/"
+  :tables (list 
+   (semanticdb-table "Emulator.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64" package nil nil [1 26]) ("org.fortytwo.c64.cpu.MOS6502Emulator" include nil nil [28 72]) ("org.fortytwo.c64.memory.Memory" include nil nil [73 111]) ("Emulator" type (:typemodifiers ("public") :members (("main" function (:typemodifiers ("public" "static") :arguments (("args" variable (:type "String[]") (reparse-symbol formal_parameters) [166 179])) :type "void") (reparse-symbol class_member_declaration) [142 685])) :type "class") nil [114 687]))
+    :file "Emulator.java"
+    :pointmax 688
+    )
+   )
+  :file "semantic.cache"
+  :semantic-tag-version "2.0beta3"
+  :semanticdb-version "2.0beta3"
+  )
