@@ -32,7 +32,7 @@ public interface CPU
     void pushStack(byte val);
     int popStack();
 
-    void handleNMI();
+    void handleNMI(int cycleOffset);
     void restart();
 
     // most important!

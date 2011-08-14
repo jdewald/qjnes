@@ -163,7 +163,7 @@ public class Keyboard implements IODevice,KeyListener
     public void keyPressed(KeyEvent e){
         int code = e.getKeyCode();
         if (code == VK_PAUSE && cpu != null){
-            cpu.handleNMI();
+            cpu.handleNMI(0);
             return;
         }
         if (code != VK_LEFT && code != VK_RIGHT && code != VK_UP && code != VK_DOWN && code != VK_CONTROL){

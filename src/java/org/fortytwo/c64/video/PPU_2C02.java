@@ -352,7 +352,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
                 registers_r[STATUS_REGISTER] |= STATUS_VBLANK;
                 //logger.info("Status register: " + Integer.toHexString(registers_r[STATUS_REGISTER]));
                 if ((registers_w[CONTROL_REGISTER_1] & CR1_INTERRUPT_ON_VBLANK) != 0){
-                    cpu.handleNMI(); 
+                    cpu.handleNMI((ppuCyclesUntilEndOfLine/3)); 
                 }
                
             }

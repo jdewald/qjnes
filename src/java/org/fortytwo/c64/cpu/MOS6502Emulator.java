@@ -55,6 +55,8 @@ public class MOS6502Emulator implements CPU
     private static final int ADDRESS_LINE_NUMBER_TEMP = 0x2A5;
 
     private int breakAddress = -1;
+    
+    private int nmiDelay = 0; // how many instructions to let run before we actually do the NMI
     boolean keepRunning = true;
     boolean inBreakPoint = false;
     
@@ -108,7 +110,12 @@ public class MOS6502Emulator implements CPU
         }
     }
 
-    public void handleNMI(){
+    public void handleNMI(int cycleOffset){
+    	if (cycleOffset == 0){
+    		nmiDelay = 1;
+    	}
+    	//System.out.println("Cycle Offset: " + cycleOffset);
+    	//setSignFlag(true);
         //        inBreakPoint = true;
         nmiTriggered = true;
     }
@@ -238,8 +245,16 @@ public class MOS6502Emulator implements CPU
             long decodeStart = 1;
             // now, we apply the addressing mode (basically , follow any indirects or indexes)
             if (numBytes > 0){
-                applyIndexing(mode, operands, pc);
-		      
+                applyIndexing(mode, operands, pc);	
+                /*skippedCycles++;
+                cyclesUntilInterrupt = notifyObservers(skippedCycles);
+                
+                if (nmiTriggered){
+                    nmiTriggered = false;
+
+                    setupNMI();
+                }*/
+               
             }
 	
             long decodeEnd = 1;
@@ -268,7 +283,11 @@ public class MOS6502Emulator implements CPU
                     long executeStart = 1;
                     //int cycles_ = instructionBean.instruction.execute(operands, memory, this);
 
+                    boolean _interruptsDisabled = interruptsDisabled;
                     int cycles_ = instruction.execute(operands, memory, this); // [REPLACE]:$execute
+                    if (nmiDelay > 0){
+                    	nmiDelay --;
+                    }
                     cycles += cycles_;
                     
                     //                    if (instruction instanceof BRK_Instruction){
@@ -278,14 +297,18 @@ public class MOS6502Emulator implements CPU
                     executeElapsed += (1 - executeStart);
 
                     skippedCycles += cycles_;
-		    
-                    cyclesUntilInterrupt = notifyObservers(skippedCycles);
-                    if (nmiTriggered){
+                    if (numBytes > 1){
+                    //	skippedCycles--;
+                    }
+                    
+                    if (! nmiTriggered) cyclesUntilInterrupt = notifyObservers(skippedCycles);
+                    if (nmiTriggered && nmiDelay <= 0){
                         nmiTriggered = false;
+                        nmiDelay = 0;
 
                         setupNMI();
                     }
-                    else if ((! interruptsDisabled) && irqTriggered){ // basically doing a JSR to the jump vector
+                    else if ((! interruptsDisabled || !_interruptsDisabled) && irqTriggered){ // basically doing a JSR to the jump vector
                         if (inBreakPoint){
                             System.out.println("[--- START IRQ ---]");
                         }
