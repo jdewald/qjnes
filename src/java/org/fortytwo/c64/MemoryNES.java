@@ -25,6 +25,7 @@ public class MemoryNES implements Memory
     private final byte[] ramData;
     private final byte[] programData;
     private final MemoryHandler ppu;
+	private final MemoryHandler apu;
     private final IODevice controller1;
     private final Memory cartridge; 
     private boolean shouldLog = false;
@@ -47,7 +48,7 @@ public class MemoryNES implements Memory
     public static final int SAVE_END = 0x7FFF;
 
     public static final int SOUND_START = 0x4000;
-    public static final int SOUND_END = 0x4013;
+    public static final int SOUND_END = 0x4017; // actually a gap at 4016
 
     public static final int EXPANSION_START = 0x4020;
     public static final int EXPANSION_END = 0x5FFF;
@@ -81,7 +82,7 @@ public class MemoryNES implements Memory
     RAM expansion;
     //    public MemoryNES(ROM programROM, int mapper, RAM ram, MemoryHandler ppu, IODevice controller1){
     /** cartridge should really be MemoryHandler, not Memory... I have way too many memory-like interfaces **/
-    public MemoryNES(Memory cartridge, RAM saved, RAM ram, MemoryHandler ppu, IODevice controller1){
+    public MemoryNES(Memory cartridge, RAM saved, RAM ram, MemoryHandler ppu, MemoryHandler apu, IODevice controller1){
         logger = Logger.getLogger(this.getClass().getName());
         this.cartridge = cartridge;
         this.programData = null;
@@ -95,6 +96,7 @@ public class MemoryNES implements Memory
         //        this.characterData = characterROM.getRaw();
         this.ramData = ram.getRaw();
         this.ppu = ppu;
+		this.apu = apu;
         this.controller1 = controller1;
         RAM_SIZE = ramData.length;
     }
@@ -197,6 +199,9 @@ public class MemoryNES implements Memory
             //return 0x42; // <== Super Mario Bros doesn't like this
             return 0x40; // not connected
         }
+        else if (location >= SOUND_START && location <= SOUND_END){
+			return apu.read(location - SOUND_START);
+        }
         else if (location == SOUND_SWITCH){ // ignore
             return 0;
         }
@@ -262,12 +267,13 @@ public class MemoryNES implements Memory
         else if (location == JOYSTICK1){
             controller1.write(val);
         }
+        else if (location >= SOUND_START && location <= SOUND_END){
+			apu.write(location - SOUND_START, val);
+        }
         else if (location == SOUND_SWITCH){
         }
         else if (location == LOW_FREQ_TIMER_CONTROL){ // ignore
             //            logger.info("Wrote " + Integer.toHexString(val) + " to " + Integer.toHexString(location));
-        }
-        else if (location >= SOUND_START && location <= SOUND_END){
         }
         else if (location == 0x4025){
             logger.info("Wrote to 4025");

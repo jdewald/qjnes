@@ -19,6 +19,7 @@ import org.fortytwo.c64.memory.RAM;
 
 import org.fortytwo.c64.memory.MemoryHandler;
 import org.fortytwo.c64.video.PPU_2C02;
+import org.fortytwo.c64.audio.APU_2A03;
 import org.fortytwo.c64.video.Screen;
 import org.fortytwo.c64.video.LineObserver;
 
@@ -73,6 +74,9 @@ public class NES {
 
             MemoryPPU ppuMemory = null;
 
+			/** SET UP AUDIO **/
+			APU_2A03 apu = new APU_2A03();
+
 
             boolean useGenie = "1".equals(properties.getProperty("org.fortytwo.c64.NES.useGenie"));
 
@@ -124,18 +128,23 @@ public class NES {
             // Almost there, provide the view into the memory/io that the CPU will get
             Memory cpuMemory = null;
             if (useGenie){
-                cpuMemory = new MemoryNES(genie, cartridgeMemory.getSaved(), ram, ppu, controller);
+                cpuMemory = new MemoryNES(genie, cartridgeMemory.getSaved(), ram, ppu, apu, controller);
             }
             else {
-                cpuMemory = new MemoryNES(cartridgeMemory,cartridgeMemory.getSaved(), ram, ppu, controller);
+                cpuMemory = new MemoryNES(cartridgeMemory,cartridgeMemory.getSaved(), ram, ppu, apu, controller);
             }
+			apu.setMemory(cpuMemory);
+
+            cpuMemory.write(0xD2, 0x00);
 
             cpu.setMemory(cpuMemory);
 
             // The PPU counts cycles so it can generate interrupts
             cpu.registerCycleObserver((CycleObserver)ppu);
+            cpu.registerCycleObserver((CycleObserver)apu);
 
             //cpu.setBreak(0xB6AC);
+//            cpu.setBreak(0xC000);
 
             cpu.run();
         }
