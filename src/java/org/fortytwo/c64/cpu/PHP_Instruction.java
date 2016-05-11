@@ -12,7 +12,7 @@ public class PHP_Instruction extends SingleByteInstruction
 
     public int execute(int[] operands, Memory memory, CPU cpu){
         //System.out.println("Pushing status onto stack: " + Integer.toHexString(cpu.readRegister(RegisterType.status)));
-        pushStack(cpu, memory, cpu.readRegister(RegisterType.status) | MOS6502Emulator.STATUS_FLAG_BREAK);
+        pushStack(cpu, memory, cpu.readRegister(RegisterType.status) | MOS6502Emulator.STATUS_FLAG_UNUSED | MOS6502Emulator.STATUS_FLAG_BREAK);
         
         return 3;
     }

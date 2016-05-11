@@ -16,9 +16,15 @@ public class BNE_Instruction extends Instruction
 	}
     }
 
+	public int execute(int[] operands, Memory memory, CPU cpu, boolean pageCrossed) {
+		int cycles = this.execute(operands, memory, cpu);
+		return pageCrossed ? (cycles + 1) : (cycles );
+	}
+
     public int execute(int[] operands, Memory memory, CPU cpu){
 	if (! cpu.getZeroFlag()){
 	    cpu.writeRegister(RegisterType.programCounter,toInt(operands));
+		return cycles + 1;
 	}
 	return cycles;
     }

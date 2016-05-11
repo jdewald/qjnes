@@ -68,6 +68,9 @@ public abstract class Instruction
     }
 
     public abstract int execute(int[] operandData,Memory memory, CPU cpu);
+    public int execute(int[] operandData,Memory memory, CPU cpu, boolean pageCrossed) {
+		return this.execute(operandData, memory, cpu);
+	}
 
 
     /*

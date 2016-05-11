@@ -16,6 +16,6 @@ public class PLA_Instruction extends SingleByteInstruction
         cpu.setSignFlag((accum & 0x80) != 0);
         cpu.setZeroFlag((accum & 0xFF) == 0);
         cpu.writeRegister(RegisterType.accumulator, accum);
-        return 3;
+        return 4;
     }
 }

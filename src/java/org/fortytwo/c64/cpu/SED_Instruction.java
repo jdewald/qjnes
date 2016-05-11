@@ -12,6 +12,6 @@ public class SED_Instruction extends SingleByteInstruction
 
     public int execute(int[] operands, Memory memory, CPU cpu){
 	cpu.setDecimalFlag(true);
-	return cycles;
+	return 2;
     }
 }

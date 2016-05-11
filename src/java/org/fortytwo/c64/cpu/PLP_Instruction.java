@@ -13,7 +13,7 @@ public class PLP_Instruction extends SingleByteInstruction
     public int execute(int[] operands, Memory memory, CPU cpu){
         int status = popStack(cpu,memory);
         //System.out.println("Popped status from stack: " + Integer.toHexString(status));
-        cpu.writeRegister(RegisterType.status, status | MOS6502Emulator.STATUS_FLAG_BREAK);
-        return 3;
+        cpu.writeRegister(RegisterType.status, MOS6502Emulator.STATUS_FLAG_UNUSED | (status & ~MOS6502Emulator.STATUS_FLAG_BREAK));
+        return 4;
     }
 }

@@ -10,21 +10,20 @@ public class BPL_Instruction extends Instruction
     public BPL_Instruction(AddressingMode mode){
 	super(mode, "BPL");
 	switch (mode){
-	case Relative: cycles = 3; break;
+	case Relative: cycles = 2; break;
 	default: throw new IllegalArgumentException("Only Relative mode supported!");
 	}
     }
 
+	public int execute(int[] operands, Memory memory, CPU cpu, boolean pageCrossed) {
+		int cycles = this.execute(operands, memory, cpu);
+		return pageCrossed ? (cycles + 1) : (cycles );
+	}
     public int execute(int[] operands, Memory memory, CPU cpu){
-        int oldPC = 0xFFFF & cpu.readRegister(RegisterType.programCounter);
         if (! cpu.getSignFlag()){
             cpu.writeRegister(RegisterType.programCounter,toInt(operands));
+			return cycles + 1;
         }
-        if ((toInt(operands) & 0xFF00) != (oldPC & 0xFF00)){
-            return cycles + 1;
-        }
-        else {
-            return cycles;
-        }
+		return cycles;
     }
 }
