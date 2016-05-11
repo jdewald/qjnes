@@ -26,7 +26,7 @@ public abstract class NESController implements IODevice {
     }
 
     public void write(int val){
-        if (lastWrite == 1 && val == 0){
+        if ((lastWrite & BUTTON_PRESSED) != 0 && (val & BUTTON_PRESSED) == 0){
             scanPosition = 1;
         }
         lastWrite = val;
@@ -39,11 +39,10 @@ public abstract class NESController implements IODevice {
             //== button){
             //            System.out.println("Button = " + button);
 
-            //            System.out.println("Returning: " + Integer.toHexString(UNKNOWN | BUTTON_PRESSED));
             returnVal =  UNKNOWN | BUTTON_PRESSED;
         }
 
-        if (lastWrite == 0){
+        if ((lastWrite & BUTTON_PRESSED)== 0){
             scanPosition++;
         }
         return returnVal;
