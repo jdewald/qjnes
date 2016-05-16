@@ -110,6 +110,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
     
     private long lastFrameTime = 0;
     private long frameCounter = 0;
+	private int sprite0Line = 0;
     private static final long FRAME_SYNC = 5;
     private static final long FRAMES_PER_SEC = 60;
     private static final long MS_PER_FRAME = 1000 / FRAMES_PER_SEC;
@@ -155,12 +156,16 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
             return horizontalTileCounter | (verticalTileCounter << 5) | (horizontalNameCounter << 10) | (verticalNameCounter << 11);
         }
             */
+			case 0: {
+						return scanLine;
+						// hack
+			}
         case 1: {
             return registers_w[CONTROL_REGISTER_2];
         }
         case STATUS_REGISTER:{ // 2
             int returnVal = registers_r[STATUS_REGISTER];
-            registers_r[STATUS_REGISTER] = getBitsUnset(registers_r[STATUS_REGISTER], STATUS_VBLANK | STATUS_SPRITE0_HIT);
+            registers_r[STATUS_REGISTER] = getBitsUnset(registers_r[STATUS_REGISTER], STATUS_VBLANK); //| STATUS_SPRITE0_HIT);
             isFirstWriteToScroll = true;
             lastPPUAddressWasHigh = false;
             //logger.info("Status is: " + Integer.toHexString(returnVal));
@@ -173,11 +178,16 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
             int returnVal = 0xFF & registers_r[PPU_MEMORY_DATA]; // buffered read
             
             //int returnVal = 0xFF & memory.read(ppuMemoryAddress);
-            registers_r[PPU_MEMORY_DATA] = 0xFF & memory.read(horizontalTileCounter 
-                                                              | (verticalTileCounter << 5)
-                                                              | (horizontalNameCounter << 10)
-                                                              | (verticalNameCounter << 11)
-                                                              | ((fineVerticalCounter & 0x3) << 12));
+			int readAddress = horizontalTileCounter 
+								| (verticalTileCounter << 5)
+								| (horizontalNameCounter << 10)
+								| (verticalNameCounter << 11)
+								| ((fineVerticalCounter & 0x3) << 12);
+
+			if (readAddress == 0x3F10 || readAddress == 0x3F14 || readAddress == 0x3F18 || readAddress == 0x3F1C) {
+				readAddress = readAddress & 0x3F0F;
+			}
+            registers_r[PPU_MEMORY_DATA] = 0xFF & memory.read(readAddress);
             //            registers_r[PPU_MEMORY_DATA] = 0xFF & memory.read(ppuMemoryAddress);
             incrementCounters();
             /*
@@ -287,11 +297,18 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
         case PPU_MEMORY_DATA: { // 7
             //            System.out.println("PPU MEMORY WRITE: " + Integer.toHexString(ppuMemoryAddress) + "," + Integer.toHexString(value));
             //memory.write(ppuMemoryAddress, value & 0xFF);
-            memory.write(horizontalTileCounter 
+			int writeAddress = horizontalTileCounter 
                          | (verticalTileCounter << 5)
                          | (horizontalNameCounter << 10)
                          | (verticalNameCounter << 11)
-                         | ((fineVerticalCounter & 0x3) << 12), value & 0xFF);
+                         | ((fineVerticalCounter & 0x3) << 12);
+			if (writeAddress == 0x3F10 ||
+					writeAddress == 0x3F14 ||
+					writeAddress == 0x3F18 ||
+					writeAddress == 0x3F1C) {
+				writeAddress = writeAddress & 0x3F0F;
+			}
+            memory.write(writeAddress, value & 0xFF);
             /*
             if (ppuMemoryAddress < 0x3F00){
                 memory.write(ppuMemoryAddress, value & 0xFF);
@@ -346,6 +363,9 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
         ppuCyclesUntilEndOfLine -= (cycles * 3);
         
         if (ppuCyclesUntilEndOfLine <= 0){
+			if (scanLine == 0) {
+				sprite0Line = 0;
+			}
             scanLine++;
             //            ppuMemoryAddress += 256; // handle the fact that we're not actually drawing
             if (scanLine == (LAST_VISIBLE_SCANLINE + 1)){
@@ -355,10 +375,10 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
                     cpu.handleNMI((ppuCyclesUntilEndOfLine/3)); 
                 }
                
-            }
-            else if (scanLine == FIRST_VISIBLE_SCANLINE){
-                // clear VBlank flag
+            } else if (scanLine == (FIRST_VISIBLE_SCANLINE - 1)) {
+                // clear VBlank flag and Sprite 0
                 registers_r[STATUS_REGISTER] = getBitsUnset(registers_r[STATUS_REGISTER],STATUS_VBLANK | STATUS_SPRITE0_HIT);
+			} else if (scanLine == FIRST_VISIBLE_SCANLINE){
                 if (displayEnabled) {
                     loadAddressFromLatches();
                 }
@@ -411,7 +431,11 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
         }
 
         //        return ppuCyclesUntilEndOfFrame;
-        return ppuCyclesUntilEndOfLine;
+		if (scanLine < (FIRST_VISIBLE_SCANLINE + 1) || scanLine >= LAST_VISIBLE_SCANLINE) {
+			return 3;
+		} else {
+			return ppuCyclesUntilEndOfLine;
+		}
         //return 1;
     }
 
@@ -606,6 +630,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
                 if (drawSpriteTile(sprite.tile,sprite.colorInfo,sprite.spriteX,line,line-sprite.spriteY,sprite.spriteNum == 0) && 
                     (registers_r[STATUS_REGISTER] & STATUS_SPRITE0_HIT) == 0){
                     registers_r[STATUS_REGISTER] |= STATUS_SPRITE0_HIT;                        
+					sprite0Line = line;
                 }
             }
         }
@@ -675,10 +700,10 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
                 int color = getNESColor(paletteValue);
                 
                 
+				if (pixelValue != 0 && isSprite0 && videoScreen.getPixel(x,y) != transparentColor){
+					sprite0Triggered = true;
+				}
                 if (paletteValue != transparentColor){
-                    if (isSprite0 && videoScreen.getPixel(x,y) != transparentColor){
-                        sprite0Triggered = true;
-                    }
                     //                    if (priority == 0 || videoScreen.getPixel(x,y) == transparentColor){
                     if (x >= 8 || ((registers_w[CONTROL_REGISTER_2] & CR2_SPRITE_MASK) != 0)){
             
@@ -722,7 +747,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
                 int pixelValue = ((bit1) | (bit2)) & 0x3;
                 pixelValue |= (paletteUpper << 2);
 
-                int paletteValue = memory.read(BACKGROUND_PALETTE_ADDRESS + pixelValue);
+                int paletteValue = memory.read((BACKGROUND_PALETTE_ADDRESS + pixelValue) & 0x3F0F);
                 int color = getNESColor(paletteValue);
 
                 videoScreen.setPixel(x,y,color);
