@@ -30,8 +30,7 @@ public class Disassembler
 		System.err.println("Unknown opcode: " + Integer.toHexString(opcode));
 		return;
 	    }
-	    Instruction.AddressingMode mode = null;
-        //	    Instruction.AddressingMode mode = InstructionSet.getAddressingMode(opcode);
+	    Instruction.AddressingMode mode = instruction.getAddressingMode();
 	    if (mode != null){
 		// based on addressing mode, read either 0,1, or 2 bytes
 		int numBytes = mode.getByteCount();
