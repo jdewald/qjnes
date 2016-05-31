@@ -10,6 +10,7 @@ import org.fortytwo.c64.memory.ROM;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.ArrayList;
 
 public class PPU_2C02 implements MemoryHandler, CycleObserver
 {
@@ -106,6 +107,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
     private Memory memory = null;
     private LineObserver lineObserver = null;
     private Screen videoScreen;
+	private Integer[] pixelBuffer = new Integer[262];
     private boolean shouldLog = false;
     
     private long lastFrameTime = 0;
@@ -344,7 +346,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
 
     public int readFromSpriteMemory(){
         int returnVal = spriteAttributeMemory[spriteMemoryCounter];
-        spriteMemoryCounter = (spriteMemoryCounter + 1) % 256;
+//        spriteMemoryCounter = (spriteMemoryCounter + 1) % 256;
 
         return returnVal;
 
@@ -512,7 +514,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
             
             int yOffset = (line - FIRST_VISIBLE_SCANLINE) / 8;
             int offset = yOffset * HORIZONTAL_TILE_COUNT + tile;
-            int nameAddress = nameTableAddress + offset;
+            //int nameAddress = nameTableAddress + offset;
 
             
 
@@ -624,6 +626,9 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
     }
     private void drawSprites(int line){
         if (previousSpriteCount > 0){
+			for (int c = 0; c < pixelBuffer.length; c++) {
+				pixelBuffer[c] = 0;
+			}
             //for (int i = previousSpriteCount - 1; i > 0; i--){
             for (int i = 0 ; i < previousSpriteCount; i++){
                 Sprite sprite = bufferedSprites[i];
@@ -633,6 +638,18 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
 					sprite0Line = line;
                 }
             }
+			
+			int transparentValue = memory.read(BACKGROUND_PALETTE_ADDRESS);
+			int transparentColor = getNESColor(transparentValue);
+			for (int x = 0; x < pixelBuffer.length; x++) {
+				if (pixelBuffer[x] != 0 && (pixelBuffer[x] & 0xFF) != transparentValue) {
+					if (videoScreen.getPixel(x, line) == transparentColor ||
+						(pixelBuffer[x] >> 8) == 0) {
+						videoScreen.setPixel(x, line, getNESColor(pixelBuffer[x] & 0xFF));
+						}
+				}
+						
+			}
         }
 
     }
@@ -689,6 +706,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
         // we actually draw from the end of it
         // which is why we add for !reverse
         int transparentColor = memory.read(BACKGROUND_PALETTE_ADDRESS);
+		int _tColor = getNESColor(transparentColor);
         for (int i = 0; i < 8; i++){
             if (x < 256){
                 int bit1 = (patternBitmap1 >> i) & 0x01;
@@ -696,20 +714,31 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
                 int pixelValue = ((bit1) | (bit2)) & 0x3;
                 pixelValue |= (paletteUpper << 2);
 
-                int paletteValue = memory.read(PALETTE_ADDRESS + pixelValue);
+                int paletteValue = memory.read((PALETTE_ADDRESS + pixelValue) & 0x3F1F);
                 int color = getNESColor(paletteValue);
                 
                 
-				if (pixelValue != 0 && isSprite0 && videoScreen.getPixel(x,y) != transparentColor){
+				if (pixelValue != 0 && isSprite0 && videoScreen.getPixel(x,y) != _tColor){
 					sprite0Triggered = true;
 				}
+				// If this pixel has FRONT priority (0), then it will go in front of background
+				// If this pixel has BACK priority (1), then background will go over it
+				// Additionally, if we see a BACK priority sprite pixel before a FRONT priority one and
+				// 		it isn't transparent, then it will block the transparent one
                 if (paletteValue != transparentColor){
-                    //                    if (priority == 0 || videoScreen.getPixel(x,y) == transparentColor){
-                    if (x >= 8 || ((registers_w[CONTROL_REGISTER_2] & CR2_SPRITE_MASK) != 0)){
-            
-                        videoScreen.setPixel(x,y,color);
-                        //                    }
-                    }
+					if (x >= 8 || ((registers_w[CONTROL_REGISTER_2] & CR2_SPRITE_MASK) != 0)) {
+						if (pixelBuffer[x] == 0 || (pixelBuffer[x] & 0xFF) == transparentColor) {
+							pixelBuffer[x] = paletteValue | (priority << 8);
+						}
+					}
+					
+					/*
+					if (videoScreen.getPixel(x,y) == _tColor){
+						if (x >= 8 || ((registers_w[CONTROL_REGISTER_2] & CR2_SPRITE_MASK) != 0)){
+							videoScreen.setPixel(x,y,color);
+						}
+					}
+					*/
                 }
                 if (reverse){
                     x++;
@@ -748,7 +777,7 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
                 pixelValue |= (paletteUpper << 2);
 
                 int paletteValue = memory.read((BACKGROUND_PALETTE_ADDRESS + pixelValue) & 0x3F0F);
-                int color = getNESColor(paletteValue);
+                int color = getNESColor(( i == 0 || (line % 7 == 0)) ? paletteValue /*0xFFFFFF*/ : paletteValue);
 
                 videoScreen.setPixel(x,y,color);
                 
