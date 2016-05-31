@@ -63,6 +63,9 @@ public class Mapper extends BaseMemory
         else if (mapper == 4){
             return new MMC3Mapper(programROM, charROM);
         }
+		else if (mapper == 7) {
+			return new AxROMMapper(programROM, charROM);
+		}
         else {
             throw new RuntimeException("Don't know how to handle mapper type: " + mapper);
         }
