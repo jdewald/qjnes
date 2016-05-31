@@ -59,7 +59,7 @@ public class GameGenie extends BaseMemory
             }
         }
         else {
-            return genieROM.read(location - 16384);
+            return genieROM.read(location % 16384);
         }
         
     }
