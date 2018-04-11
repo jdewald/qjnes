@@ -246,6 +246,9 @@ public class PPU_2C02 implements MemoryHandler, CycleObserver
             
             break;
         }
+            case 2: {
+                break;
+            }
         case SPRITE_MEMORY_ADDRESS:{ // 3
             setSpriteMemoryAddress(value);
             break;
