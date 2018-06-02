@@ -17,7 +17,6 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JMenuBar;
-import javax.swing.JPanel;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -126,16 +125,16 @@ public class Emulator
              * Create the view that the 6502 sees
              */
             // cartridge should actually use a different view of memory (separate "emulator" mode)
-            final Memory memory6502 = new Memory6502(kernalROM,basicROM,charROM,cartridgeROM, romStart, ram,colorRAM, vic,cia1,cia2);
+            final Memory6502 memory6502 = new Memory6502(kernalROM,basicROM,charROM,cartridgeROM, romStart, ram,colorRAM, vic,cia1,cia2);
             if (crtFile != null){
-                ((Memory6502)memory6502).setGameStatus(crtFile.getGameStatus());
-                ((Memory6502)memory6502).setExromStatus(crtFile.getExromStatus());
+                memory6502.setGameStatus(crtFile.getGameStatus());
+                memory6502.setExromStatus(crtFile.getExromStatus());
             }
 
             JMenuItem unloadItem = new JMenuItem("Unload Cartridge");
             unloadItem.addActionListener(new ActionListener () {
                     public void actionPerformed(ActionEvent e){
-                        ((Memory6502)memory6502).setGameStatus(1);
+                        (memory6502).setGameStatus(1);
                     }
                 });
             cartridgeMenu.add(unloadItem);
@@ -150,7 +149,7 @@ public class Emulator
             /**
              * Now create the view that the VIC sees
              */
-            Memory memoryVIC = new VICMemory(ram,cia2, charROM, colorRAM);
+            Memory memoryVIC = new VICMemory(ram,cia2, memory6502.getCharROM(), colorRAM);
             vic.setMemory(memoryVIC);
 
             /*Thread cpuThread = new Thread(new Runnable() { public void run() { cpu.run(); } } );
