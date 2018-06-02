@@ -1,6 +1,5 @@
 package org.fortytwo.c64;
 
-import org.fortytwo.c64.memory.Memory;
 import org.fortytwo.c64.memory.BaseMemory;
 import org.fortytwo.c64.memory.RAM;
 import org.fortytwo.c64.memory.ROM;
@@ -8,9 +7,8 @@ import org.fortytwo.c64.memory.ROM;
 import java.io.IOException;
 import org.fortytwo.c64.video.VICII;
 
-import java.util.ArrayList;
 import java.util.logging.Logger;
-import java.util.logging.Level;
+
 /**
  * Represents the Main Memory for the Commodore 64
  * This handles ROM as well as special I/O sections
@@ -36,7 +34,6 @@ public class Memory6502 extends BaseMemory
 
 
     private final byte[] ramData;
-    private boolean shouldLog = false;
     public static final int RAM_SIZE = 65535;
 
 
@@ -94,6 +91,7 @@ public class Memory6502 extends BaseMemory
     private int prevIOWrite = 0xFF;
     private static int iolatch = 0x17;
     public Memory6502(ROM kernalROM, ROM basicROM, ROM charROM, ROM cartridgeROM, int cartROMStart, RAM ram, RAM colorRAM, VICII vic, CIA cia1, CIA cia2){
+        disableLogging();
         logger = Logger.getLogger(this.getClass().getName());
         //	this.kernalROM = kernalROM;
         this.kernalData = kernalROM.getRaw();
@@ -481,6 +479,21 @@ public class Memory6502 extends BaseMemory
 
     }
 
+    public ROM getCharROM() {
+        return charROM;
+    }
+
+    public RAM getRam() {
+        return ram;
+    }
+
+    public RAM getColorRAM() {
+        return colorRAM;
+    }
+
+    public CIA getCia2() {
+        return cia2;
+    }
 }
 
 
