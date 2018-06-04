@@ -1,4 +1,4 @@
-package org.fortytwo.c64;
+package org.fortytwo.nes;
 
 import org.fortytwo.c64.memory.Memory;
 import org.fortytwo.c64.memory.MemoryHandler;
