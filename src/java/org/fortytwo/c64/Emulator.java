@@ -35,14 +35,7 @@ public class Emulator
             Joystick joystick2 = new Joystick();
             //_1541 diskDrive = new _1541();
 
-            CIA cia1 = new CIA("CIA1");
-
-            cia1.setKeyboard(keyboard);
-            cia1.setJoystick1(joystick);
-
-            //cia1.setIODevice1(keyboard);
-            //cia1.setIODevice1(joystick2);
-            //            cia1.setIODevice2(joystick);
+            CIA cia1 = setupCia1(keyboard, joystick);
             //cia2.setIODevice1(joystick2);
             //cia2.setIODevice(diskDrive);
 
@@ -111,6 +104,18 @@ public class Emulator
         finally {
             Runtime.getRuntime().exit(0);
         }
+    }
+
+    static CIA setupCia1(Keyboard keyboard, Joystick joystick) {
+        CIA cia1 = new CIA("CIA1");
+
+        cia1.setKeyboard(keyboard);
+        cia1.setJoystick1(joystick);
+
+        //cia1.setIODevice1(keyboard);
+        //cia1.setIODevice1(joystick2);
+        //            cia1.setIODevice2(joystick);
+        return cia1;
     }
 
 }
