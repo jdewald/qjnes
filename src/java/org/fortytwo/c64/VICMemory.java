@@ -23,7 +23,6 @@ public class VICMemory extends BaseMemory
     private RAM ram = null;
     private ROM charROM = null;
     private RAM colorRAM = null;
-    private boolean shouldLog = false;
 
     private int offset = 0;
 
@@ -48,6 +47,7 @@ public class VICMemory extends BaseMemory
     public VICMemory(RAM ram, CIA cia, ROM charROM, RAM colorRAM){
         //	this();
         //this.ram = ram;
+        disableLogging();
         this.ramData = ram.getRaw();
         this.cia = cia;
         this.charROM = charROM;
@@ -147,5 +147,3 @@ public class VICMemory extends BaseMemory
     }
 
 }
-
-

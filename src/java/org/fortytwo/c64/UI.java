@@ -36,6 +36,19 @@ class UI {
         /*** Setup Menu ***/
         JMenuBar menuBar = new JMenuBar();
 
+        JMenu testMenu = setupTestMenu();
+
+        cartridgeMenu = new JMenu("Cartridges");
+
+        menuBar.add(testMenu);
+        menuBar.add(cartridgeMenu);
+
+        setupVideoFrame(videoFrame, menuBar);
+        //            emulatorFrame.getContentPane().add(videoFrame);
+        return this;
+    }
+
+    JMenu setupTestMenu() {
         JMenu testMenu = new JMenu("Debug");
         JMenuItem consoleItem = new JMenuItem("Debugger");
         consoleItem.addActionListener(new ActionListener(){
@@ -53,12 +66,10 @@ class UI {
             }
         });
         testMenu.add(resetItem);
+        return testMenu;
+    }
 
-        cartridgeMenu = new JMenu("Cartridges");
-
-        menuBar.add(testMenu);
-        menuBar.add(cartridgeMenu);
-
+    private void setupVideoFrame(JFrame videoFrame, JMenuBar menuBar) {
         videoFrame.setJMenuBar(menuBar);
 
 
@@ -74,8 +85,6 @@ class UI {
         videoFrame.addKeyListener(joystick);
         videoFrame.setFocusable(true);
         videoFrame.setVisible(true);
-        //            emulatorFrame.getContentPane().add(videoFrame);
-        return this;
     }
 
     static void initUnloadCartridgeMenuItem(JMenu cartridgeMenu, Memory6502 memory6502) {
