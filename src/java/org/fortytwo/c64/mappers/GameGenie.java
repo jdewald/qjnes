@@ -6,7 +6,7 @@ import org.fortytwo.c64.memory.ROM;
 import org.fortytwo.c64.memory.RAM;
 import org.fortytwo.c64.cpu.CPU;
 
-import org.fortytwo.c64.util.NESFile;
+import org.fortytwo.nes.util.NESFile;
 
 import java.io.File;
 public class GameGenie extends BaseMemory

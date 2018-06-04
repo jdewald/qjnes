@@ -1,5 +1,7 @@
 package org.fortytwo.c64;
 
+import org.fortytwo.c64.io.Joystick;
+import org.fortytwo.c64.io.Keyboard;
 import org.fortytwo.c64.memory.BaseMemory;
 import org.fortytwo.c64.memory.RAM;
 import org.fortytwo.c64.memory.ROM;
@@ -30,7 +32,8 @@ public class Memory6502 extends BaseMemory
     private VICII vic = null;
     private CIA cia1 = null;
     private CIA cia2 = null;
-    
+    private Keyboard keyboard;
+    private Joystick joystick;
 
 
     private final byte[] ramData;
@@ -105,7 +108,7 @@ public class Memory6502 extends BaseMemory
             this.cartridgeROMStart = cartROMStart;
             this.cartridgeROMEnd = (cartROMStart + cartridgeData.length) - 1;
         }
-        //this.ram = ram;
+        this.ram = ram;
         this.ramData = ram.getRaw();
         this.colorRAM = colorRAM;
         this.vic = vic;
