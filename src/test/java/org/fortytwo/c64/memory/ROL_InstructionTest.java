@@ -1,10 +1,9 @@
 package org.fortytwo.c64.memory;
 
 import org.fortytwo.c64.Emulator;
-import org.fortytwo.c64.cpu.CMP_Instruction;
 import org.fortytwo.c64.cpu.Instruction;
 import org.fortytwo.c64.cpu.MOS6502Emulator;
-import org.fortytwo.exceptions.ImplementationNotFinishedYetException;
+import org.fortytwo.c64.cpu.ROR_Instruction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,8 +11,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
-public class CMP_InstructionTest {
-
+public class ROL_InstructionTest {
     private MOS6502Emulator emulator;
 
     @Before
@@ -27,16 +25,17 @@ public class CMP_InstructionTest {
     }
 
     @Test
-    public void CMPSizeTest() {
-        CMP_Instruction cmpInstruction = new CMP_Instruction(Instruction.AddressingMode.Absolute);
+    public void RORByteRotationTest() {
+        ROR_Instruction rorInstruction = new ROR_Instruction(Instruction.AddressingMode.Absolute);
 
         int address = 0xd020;
-        int value = 0x00;
+        int value = 0b00100100;
 
-        cmpInstruction.execute(new int[]{address, value}, emulator.getMemory(), emulator);
+        Memory memory = emulator.getMemory();
 
-        assertEquals(2, cmpInstruction.getAddressingMode().getByteCount());
+        rorInstruction.execute(new int[]{address, value}, memory, emulator);
+
+        assertEquals(0b01001000, memory.read(address));
 
     }
-
 }

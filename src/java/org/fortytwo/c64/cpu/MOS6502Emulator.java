@@ -1064,6 +1064,10 @@ public class MOS6502Emulator implements CPU
         return (0xFF & lowHigh[0]) | ((0xFF & lowHigh[1]) << 8);
     }
 
+    public Memory getMemory() {
+        return memory;
+    }
+
     class InstructionBean{
         int address;
 		int opcode;
