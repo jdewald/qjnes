@@ -10,10 +10,10 @@ public class RamTest {
     public void testReadWrite(){
         RAM ram = new RAM(64 * 1024);
 
-        ram.write(53280, 2);
+        ram.write(0xd020, 2);
         ram.write(53281, 4);
 
-        assertEquals(2, ram.read(53280));
+        assertEquals(2, ram.read(0xd020));
         assertEquals(4, ram.read(53281));
     }
 }

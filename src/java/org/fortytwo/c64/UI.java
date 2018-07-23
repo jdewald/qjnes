@@ -15,6 +15,7 @@ class UI {
     private Joystick joystick;
     private JMenu cartridgeMenu;
     private Screen videoScreen;
+    private JFrame videoFrame;
 
     public UI(MOS6502Emulator cpu, Keyboard keyboard, Joystick joystick) {
         this.cpu = cpu;
@@ -31,7 +32,7 @@ class UI {
     }
 
     public UI invoke() {
-        JFrame videoFrame = new JFrame("Commodore 64");
+        videoFrame = new JFrame("Commodore 64");
 
         /*** Setup Menu ***/
         JMenuBar menuBar = new JMenuBar();
@@ -46,6 +47,14 @@ class UI {
         setupVideoFrame(videoFrame, menuBar);
         //            emulatorFrame.getContentPane().add(videoFrame);
         return this;
+    }
+
+    void show(){
+        this.videoFrame.setVisible(true);
+    }
+
+    void hide(){
+        this.videoFrame.setVisible(false);
     }
 
     JMenu setupTestMenu() {
