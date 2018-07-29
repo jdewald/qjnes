@@ -128,7 +128,7 @@ public class CIA implements MemoryHandler, CycleObserver
     public int readDirect(int address){
 	return registers_w[address % NUM_REGISTERS];
     }
-    
+
     public int read(int address){
         if (logger.isLoggable(Level.FINER))
             System.out.println(name + " Reading from: " + Integer.toHexString(address));
@@ -501,4 +501,11 @@ public class CIA implements MemoryHandler, CycleObserver
     }
 
 
+    public IODevice getKeyboard() {
+        return keyboard;
+    }
+
+    public IODevice getJoystick1() {
+        return joystick1;
+    }
 }
