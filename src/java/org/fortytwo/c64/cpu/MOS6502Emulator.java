@@ -3,6 +3,7 @@ package org.fortytwo.c64.cpu;
 import org.fortytwo.c64.util.Ringbuffer;
 import org.fortytwo.c64.util.PRGFile;
 import org.fortytwo.c64.util.StringUtil;
+
 import java.io.File;
 
 import org.fortytwo.c64.memory.Memory;
@@ -14,16 +15,16 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+
 /**
  * Emulatores a MOS6502/6510
  * TODO: Write separate CPU monitor that sits on top of CPU
- *   -- can read from all registers already
+ * -- can read from all registers already
  */
-public class MOS6502Emulator implements CPU
-{
+public class MOS6502Emulator implements CPU {
     public static final int INITIAL_ADDRESS = 0xFFFC; // pointer to reset vector in kernel
     public static final int IRQ_VECTOR_ADDRESS = 0xFFFE;
-    public static final int NMI_ADDRESS = 0xFFFA; 
+    public static final int NMI_ADDRESS = 0xFFFA;
 
     public static final int REGISTER_COUNT = 6;
     private boolean interruptsDisabled;
@@ -57,11 +58,11 @@ public class MOS6502Emulator implements CPU
     private static final int ADDRESS_LINE_NUMBER_TEMP = 0x2A5;
 
     private int breakAddress = -1;
-    
+
     private int nmiDelay = 0; // how many instructions to let run before we actually do the NMI
     boolean keepRunning = true;
     boolean inBreakPoint = false;
-    
+
     double elapsedTime = 0.0;
     long fetchElapsed;
     long decodeElapsed = 0;
@@ -75,20 +76,21 @@ public class MOS6502Emulator implements CPU
 
     public boolean restart = true;
     private ArrayList<CycleObserver> observers;
-	boolean shouldLog = true;
+    boolean shouldLog = true;
     //private Hashtable<RegisterType,Integer> registers;
     private Logger logger;
-	private java.io.PrintWriter instWriter;
+    private java.io.PrintWriter instWriter;
     private Memory memory;
     private Ringbuffer instructionBuffer;
     private InstructionSet instructionSet;
-    public MOS6502Emulator(InstructionSet instructionSet){
+
+    public MOS6502Emulator(InstructionSet instructionSet) {
         logger = Logger.getLogger(this.getClass().getName());
-		try {
-			instWriter = new PrintWriter(new java.io.File("./instructions.log"));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+        try {
+            instWriter = new PrintWriter(new java.io.File("./instructions.log"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         //registers = new Hashtable<RegisterType,Integer>(RegisterType.values().length);
         interruptsDisabled = false;
         carryFlag = false;
@@ -101,138 +103,136 @@ public class MOS6502Emulator implements CPU
         this.instructionSet = instructionSet;
     }
 
-    public void setMemory(Memory memory){
+    public void setMemory(Memory memory) {
         this.memory = memory;
     }
-	
-    public void registerCycleObserver(CycleObserver observer){
+
+    public void registerCycleObserver(CycleObserver observer) {
         observers.add(observer);
     }
 
-    public void setBreak(int address){
-        if (address == -1){
+    public void setBreak(int address) {
+        if (address == -1) {
             inBreakPoint = true;
-        }
-        else {
+        } else {
             this.breakAddress = address;
         }
     }
 
-    public void handleNMI(int cycleOffset){
-    	if (cycleOffset == 0){
-    		nmiDelay = 1;
-    	}
-    	//System.out.println("Cycle Offset: " + cycleOffset);
-    	//setSignFlag(true);
+    public void handleNMI(int cycleOffset) {
+        if (cycleOffset == 0) {
+            nmiDelay = 1;
+        }
+        //System.out.println("Cycle Offset: " + cycleOffset);
+        //setSignFlag(true);
         //        inBreakPoint = true;
         nmiTriggered = true;
     }
 
-    public void restart(){
+    public void restart() {
         restart = true;
         keepRunning = false;
     }
 
-    public void run(){
-        if (memory == null){
+    public void run() {
+        if (memory == null) {
             throw new RuntimeException("Memory must be initialized!");
         }
-	
+
         //        InstructionSet.loadInstructions(); // [REMOVE] can take a bit to instantiate 255 objects
-        while (restart){
+        while (restart) {
             restart = false;
-        logger.info("*** RESTARTING");
-        writeRegister(RegisterType.programCounter,memory.readWord(INITIAL_ADDRESS));
-	    //writeRegister(RegisterType.programCounter, 0xC000);  // For NESTEST
-		writeRegister(RegisterType.status, 0x24);
-        logger.info("Restarting at: " + Integer.toHexString(readRegister(RegisterType.programCounter)));
-        int operands[] = new int[2];
-        long start = 0;
-        long end = 0;
-        long fetchStart = 0;
-        long fetchEnd = 0;
-        boolean skipped = false;
-        int cyclesUntilInterrupt = 0;
-        int skippedCycles = 0;
-        boolean interrupted = false;
-        keepRunning = true;
-        while (keepRunning){
-            if (inBreakPoint){
-                System.err.println("[-------- START CYCLE -------------]");
-            }
-            start = 1;
+            logger.info("*** RESTARTING");
+            writeRegister(RegisterType.programCounter, memory.readWord(INITIAL_ADDRESS));
+            //writeRegister(RegisterType.programCounter, 0xC000);  // For NESTEST
+            writeRegister(RegisterType.status, 0x24);
+            logger.info("Restarting at: " + Integer.toHexString(readRegister(RegisterType.programCounter)));
+            int operands[] = new int[2];
+            long start = 0;
+            long end = 0;
+            long fetchStart = 0;
+            long fetchEnd = 0;
+            boolean skipped = false;
+            int cyclesUntilInterrupt = 0;
+            int skippedCycles = 0;
+            boolean interrupted = false;
+            keepRunning = true;
+            while (keepRunning) {
+                if (inBreakPoint) {
+                    System.err.println("[-------- START CYCLE -------------]");
+                }
+                start = 1;
 
-            int pc = readRegister(RegisterType.programCounter);
+                int pc = readRegister(RegisterType.programCounter);
 
-            if (pc == breakAddress){
-                inBreakPoint = true;
-            }
+                if (pc == breakAddress) {
+                    inBreakPoint = true;
+                }
 
 
-            /** FETCH INSTRUCTION **/
-            fetchStart = 1;
-            int opcode = 0xFF & memory.read(pc);
-            //* [REMOVE]
-            Instruction instruction = instructionSet.getByOpCode(opcode); 
-            fetchEnd = 1;
-            fetchElapsed += (fetchEnd - fetchStart);
-            if (instruction == null){
-                System.err.println("Unknown opcode: " + Integer.toHexString(opcode));
-                instruction = instructionSet.getByOpCode(0xEA); // NOP
-                //opcode = 0xEA;
-                
-                    InstructionBean trace = (InstructionBean)instructionBuffer.getFirst();
-                    while (trace != null){
+                /** FETCH INSTRUCTION **/
+                fetchStart = 1;
+                int opcode = 0xFF & memory.read(pc);
+                //* [REMOVE]
+                Instruction instruction = instructionSet.getByOpCode(opcode);
+                fetchEnd = 1;
+                fetchElapsed += (fetchEnd - fetchStart);
+                if (instruction == null) {
+                    System.err.println("Unknown opcode: " + Integer.toHexString(opcode));
+                    instruction = instructionSet.getByOpCode(0xEA); // NOP
+                    //opcode = 0xEA;
+
+                    InstructionBean trace = (InstructionBean) instructionBuffer.getFirst();
+                    while (trace != null) {
                         trace.display();
-                        trace = (InstructionBean)instructionBuffer.getNext();
+                        trace = (InstructionBean) instructionBuffer.getNext();
                     }
                     //inBreakPoint = true;
                     //return;
-                
-            }
-	        //* [/REMOVE]
-            //if (shouldLog && logger.isLoggable(Level.FINEST))
-            //logger.finest(instruction.getAssembly());
-	
-            /** "DEOODE" OPERANDS **/
-            Instruction.AddressingMode mode = instruction.getAddressingMode(); // [REPLACE]:$mode
-        
-            //if (shouldLog && logger.isLoggable(Level.FINEST))
-            //logger.finest(mode.toString());
-	
-            // we always use the same operand data
-            operands[0] = 0;
-            operands[1] = 0;
-            //int instructionData = opcode << 16;
-            int numBytes = mode.getByteCount();
-            //	    int[] operands = new int[numBytes];
-            if (numBytes > 0){
-                if (numBytes == 1){
-                    operands[0] = memory.read(pc + 1);
+
                 }
-                else if (numBytes == 2){
-                    int val = memory.readWord(pc + 1);
-                    operands[0] = val & 0xFF;
-                    operands[1] = (val & 0xFF00) >> 8;
-                }
+                //* [/REMOVE]
+                //if (shouldLog && logger.isLoggable(Level.FINEST))
+                //logger.finest(instruction.getAssembly());
+
+                /** "DEOODE" OPERANDS **/
+                Instruction.AddressingMode mode = instruction.getAddressingMode(); // [REPLACE]:$mode
+
+                //if (shouldLog && logger.isLoggable(Level.FINEST))
+                //logger.finest(mode.toString());
+
+                // we always use the same operand data
+                operands[0] = 0;
+                operands[1] = 0;
+                //int instructionData = opcode << 16;
+                int numBytes = mode.getByteCount();
+                //	    int[] operands = new int[numBytes];
+                if (numBytes > 0) {
+                    if (numBytes == 1) {
+                        operands[0] = memory.read(pc + 1);
+                    } else if (numBytes == 2) {
+                        int val = memory.readWord(pc + 1);
+                        operands[0] = val & 0xFF;
+                        operands[1] = (val & 0xFF00) >> 8;
+                    }
                 /*
                   for (int i = 1; i <= numBytes; i++){
                   //instructionData |= ((0xFF & memory.read(pc + i)) << (8 * (2- i)));
                   operands[i-1] = 0xFF & memory.read(pc + i);
                   }
                 */
-	    
-            }
 
-            // REMOVE]
-            InstructionBean instructionBean = new InstructionBean(pc, opcode, instruction, operands); // [REMOVE]
+                }
+
+                // REMOVE]
+                InstructionBean instructionBean = new InstructionBean(pc, opcode, instruction, operands); // [REMOVE]
 			/*instWriter.print(instructionBean.toString());
 			instWriter.print("\t");
 			instWriter.print(nesTestRegisters());
 			instWriter.println();
 			instWriter.flush();
 			*/
-			//instLogger.info(instructionBean.toString());
+                //instLogger.info(instructionBean.toString());
             /*            if (pc == LOAD_RAM_ADDRESS){ // intercept BASIC load's call to LOAD RAM
                 System.out.println("Intercepting LOADRAM");
                 handleLoadRAMFromDevice();
@@ -253,17 +253,17 @@ public class MOS6502Emulator implements CPU
                 opcode = 0x60;
             }
             */
-            //* [REMOVE
-                        //	InstructionBean instructionBean = fetchAndDecodeInstruction(pc);
+                //* [REMOVE
+                //	InstructionBean instructionBean = fetchAndDecodeInstruction(pc);
 
-            pc = pc + 1 + numBytes; // move our PC to the next instruction
-            writeRegister(RegisterType.programCounter,pc); // this can get overwritten by the instruction
+                pc = pc + 1 + numBytes; // move our PC to the next instruction
+                writeRegister(RegisterType.programCounter, pc); // this can get overwritten by the instruction
 
-            long decodeStart = 1;
-			boolean crossed = false;
-            // now, we apply the addressing mode (basically , follow any indirects or indexes)
-            if (numBytes > 0){
-                crossed = applyIndexing(mode, operands, pc);	
+                long decodeStart = 1;
+                boolean crossed = false;
+                // now, we apply the addressing mode (basically , follow any indirects or indexes)
+                if (numBytes > 0) {
+                    crossed = applyIndexing(mode, operands, pc);
                 /*skippedCycles++;
                 cyclesUntilInterrupt = notifyObservers(skippedCycles);
                 
@@ -272,132 +272,126 @@ public class MOS6502Emulator implements CPU
 
                     setupNMI();
                 }*/
-               
-            }
-	
-            long decodeEnd = 1;
-            decodeElapsed += (decodeEnd - decodeStart);
 
-	            //	    InstructionBean instructionBean = fetchAndDecodeInstruction(pc);
-            instructionBuffer.add(instructionBean); // [REMOVE]
+                }
 
-            if (inBreakPoint){
-                end = 1;
-                elapsedTime += (end - start);
-	       
-                instructionBean.display(); // [REMOVE]
-                //		System.out.println(Integer.toHexString(pc) + " " + instructionBean.instruction.getFullAssemblyLine(mode,instructionBean.operands));
+                long decodeEnd = 1;
+                decodeElapsed += (decodeEnd - decodeStart);
 
-                skipped = handleDebuggingBreakPoint();
-                start = 1;
-            }
+                //	    InstructionBean instructionBean = fetchAndDecodeInstruction(pc);
+                instructionBuffer.add(instructionBean); // [REMOVE]
 
+                if (inBreakPoint) {
+                    end = 1;
+                    elapsedTime += (end - start);
 
+                    instructionBean.display(); // [REMOVE]
+                    //		System.out.println(Integer.toHexString(pc) + " " + instructionBean.instruction.getFullAssemblyLine(mode,instructionBean.operands));
+
+                    skipped = handleDebuggingBreakPoint();
+                    start = 1;
+                }
 
 
+                if (!skipped) {
+                    try {
+                        long executeStart = 1;
+                        //int cycles_ = instructionBean.instruction.execute(operands, memory, this);
 
-            if (! skipped){
-                try {
-                    long executeStart = 1;
-                    //int cycles_ = instructionBean.instruction.execute(operands, memory, this);
-
-                    boolean _interruptsDisabled = interruptsDisabled;
-                    int cycles_ = instruction.execute(operands, memory, this, crossed); // [REPLACE]:$execute
-                    if (nmiDelay > 0){
-                    	nmiDelay --;
-                    }
-                    cycles += cycles_;
-                    
-                    //                    if (instruction instanceof BRK_Instruction){
-                    //  inBreakPoint = true;
-                    //}
-
-                    executeElapsed += (1 - executeStart);
-
-                  	skippedCycles += cycles_;
-                    if (numBytes > 1){
-                    //	skippedCycles--;
-                    }
-                    
-                    if (! nmiTriggered) cyclesUntilInterrupt = notifyObservers(skippedCycles);
-                    if (nmiTriggered && nmiDelay <= 0){
-                        nmiTriggered = false;
-                        nmiDelay = 0;
-
-                        setupNMI();
-                    }
-                    else if ((! interruptsDisabled || !_interruptsDisabled) && irqTriggered){ // basically doing a JSR to the jump vector
-                        if (inBreakPoint){
-                            System.out.println("[--- START IRQ ---]");
+                        boolean _interruptsDisabled = interruptsDisabled;
+                        int cycles_ = instruction.execute(operands, memory, this, crossed); // [REPLACE]:$execute
+                        if (nmiDelay > 0) {
+                            nmiDelay--;
                         }
-                        setupInterrupt();
-                        
-                        if (inBreakPoint){
-                            System.out.println("[--- END IRQ   ---]");
+                        cycles += cycles_;
+
+                        //                    if (instruction instanceof BRK_Instruction){
+                        //  inBreakPoint = true;
+                        //}
+
+                        executeElapsed += (1 - executeStart);
+
+                        skippedCycles += cycles_;
+                        if (numBytes > 1) {
+                            //	skippedCycles--;
                         }
-                        
-                    }
-                    irqTriggered = false;
-                    //interrupted = false;
-                    
-                    //if (skippedCycles >= cyclesUntilInterrupt){
-                    
-                    //                        cyclesUntilInterrupt = notifyObservers(skippedCycles);
+
+                        if (!nmiTriggered) cyclesUntilInterrupt = notifyObservers(skippedCycles);
+                        if (nmiTriggered && nmiDelay <= 0) {
+                            nmiTriggered = false;
+                            nmiDelay = 0;
+
+                            setupNMI();
+                        } else if ((!interruptsDisabled || !_interruptsDisabled) && irqTriggered) { // basically doing a JSR to the jump vector
+                            if (inBreakPoint) {
+                                System.out.println("[--- START IRQ ---]");
+                            }
+                            setupInterrupt();
+
+                            if (inBreakPoint) {
+                                System.out.println("[--- END IRQ   ---]");
+                            }
+
+                        }
+                        irqTriggered = false;
+                        //interrupted = false;
+
+                        //if (skippedCycles >= cyclesUntilInterrupt){
+
+                        //                        cyclesUntilInterrupt = notifyObservers(skippedCycles);
                         //    logger.info("Cycles Until Interrupt: " + cyclesUntilInterrupt);
                         //                        if (cyclesUntilInterrupt == 0){
                         //    interrupted = true;
                         //}
                         skippedCycles = 0;
-		    
+
                         //}
-                    
-                }
-                catch (InstructionException e){
-                    e.printStackTrace();
 
-                    //* [REMOVE]
-                    InstructionBean trace = (InstructionBean)instructionBuffer.getFirst();
-                    while (trace != null){
-                        trace.display();
-                        trace = (InstructionBean)instructionBuffer.getNext();
+                    } catch (InstructionException e) {
+                        e.printStackTrace();
+
+                        //* [REMOVE]
+                        InstructionBean trace = (InstructionBean) instructionBuffer.getFirst();
+                        while (trace != null) {
+                            trace.display();
+                            trace = (InstructionBean) instructionBuffer.getNext();
+                        }
+                        //* [/REMOVE]
+                        return;
+                    } catch (RuntimeException e) {
+                        e.printStackTrace();
+                        handleDebuggingBreakPoint();
                     }
-		            //* [/REMOVE]
-                    return;
+
                 }
-                catch (RuntimeException e){
-                    e.printStackTrace();
-                    handleDebuggingBreakPoint();
+                skipped = false;
+                end = 1;
+                elapsedTime += (end - start);
+
+                // OLD IRQ LOCATION
+                loopCount = 1;
+
+                if (inBreakPoint) {
+                    System.err.println("[---------- END CYCLE ---------------]");
                 }
-
             }
-            skipped = false;
-            end = 1;
-            elapsedTime += (end - start);
-
-            // OLD IRQ LOCATION
-            loopCount = 1;
-
-            if (inBreakPoint){
-                System.err.println("[---------- END CYCLE ---------------]");
-            }
-        }
-        logger.info("** EXITED MAIN LOOP");
+            logger.info("** EXITED MAIN LOOP");
         }
     }
 
     //* [INSERT]:$instructions
-    public void handleInterrupt(){
+    public void handleInterrupt() {
         irqTriggered = true;
     }
 
-    public void setupInterrupt(){
+    public void setupInterrupt() {
         //        setInterruptsDisabled(true);
 
         int irqAddress = memory.readWord(IRQ_VECTOR_ADDRESS);
         int progCounter = readRegister(RegisterType.programCounter);
 
-        pushStack((byte)((progCounter & 0xFF00) >> 8));
-        pushStack((byte)((progCounter & 0xFF)));
+        pushStack((byte) ((progCounter & 0xFF00) >> 8));
+        pushStack((byte) ((progCounter & 0xFF)));
         int status = getCarryFlag() ? STATUS_FLAG_CARRY : 0x00;
         status |= getZeroFlag() ? STATUS_FLAG_ZERO : 0x00;
         status |= getDecimalFlag() ? STATUS_FLAG_DECIMAL : 0x00;
@@ -405,23 +399,23 @@ public class MOS6502Emulator implements CPU
         status |= getSignFlag() ? STATUS_FLAG_SIGN : 0x00;
         //status |= getBreakFlag() ? STATUS_FLAG_BREAK : 0x00;
         //status |= STATUS_FLAG_INTERRUPT;
-        pushStack((byte)status);
-	
+        pushStack((byte) status);
+
         writeRegister(RegisterType.programCounter, irqAddress);
-   
+
         //inBreakPoint = true;
         //handleDebuggingBreakPoint();
-	
+
     }
 
-    public void setupNMI(){
+    public void setupNMI() {
         //        setInterruptsDisabled(true);
 
         int irqAddress = memory.readWord(NMI_ADDRESS);
         int progCounter = readRegister(RegisterType.programCounter);
 
-        pushStack((byte)((progCounter & 0xFF00) >> 8));
-        pushStack((byte)((progCounter & 0xFF)));
+        pushStack((byte) ((progCounter & 0xFF00) >> 8));
+        pushStack((byte) ((progCounter & 0xFF)));
         int status = getCarryFlag() ? STATUS_FLAG_CARRY : 0x00;
         status |= getZeroFlag() ? STATUS_FLAG_ZERO : 0x00;
         status |= getDecimalFlag() ? STATUS_FLAG_DECIMAL : 0x00;
@@ -430,22 +424,22 @@ public class MOS6502Emulator implements CPU
         status |= getInterruptsDisabled() ? STATUS_FLAG_INTERRUPT : 0x00;
         //status |= getBreakFlag() ? STATUS_FLAG_BREAK : 0x00;
         // |= STATUS_FLAG_INTERRUPT;
-        pushStack((byte)status);
-	
+        pushStack((byte) status);
+
         writeRegister(RegisterType.programCounter, irqAddress);
-   
+
         //inBreakPoint = true;
         //handleDebuggingBreakPoint();
-	
+
     }
 
-    private int notifyObservers(int cycles){
+    private int notifyObservers(int cycles) {
         //	logger.info("Notifying observers of " + cycles + " cycles" );
         int untilInterrupt = 9999999;
-        for (CycleObserver observer : observers){
+        for (CycleObserver observer : observers) {
             int tmp = observer.tick(cycles, this);
             //  logger.info(observer.getClass().getName() + " cycles: " + tmp);
-            if (tmp != -1 && tmp < untilInterrupt){
+            if (tmp != -1 && tmp < untilInterrupt) {
                 untilInterrupt = tmp;
             }
             /*            if (tmp == 0 && ! interruptsDisabled){
@@ -455,32 +449,33 @@ public class MOS6502Emulator implements CPU
         }
         return untilInterrupt;
     }
-    private void clearRegisters(){
-        for (int i = 0; i < REGISTER_COUNT; i++){
+
+    private void clearRegisters() {
+        for (int i = 0; i < REGISTER_COUNT; i++) {
             registers[i] = 0;
         }
     }
 
-	private String nesTestRegisters() {
+    private String nesTestRegisters() {
         StringBuffer buf = new StringBuffer();
-        buf.append("A:").append(String.format("%02X",registers[RegisterType.accumulator])).append(" ");
-        buf.append("X:").append(String.format("%02X",registers[RegisterType.X])).append(" ");
-        buf.append("Y:").append(String.format("%02X",registers[RegisterType.Y])).append(" ");
-		buf.append("P:").append(String.format("%02X",registers[RegisterType.status])).append(" ");
-        buf.append("SP:").append(String.format("%02X",registers[RegisterType.stackPointer])).append(" ");
-        buf.append("CYC:").append(StringUtil.leftPad("" + ((cycles * 3) % 341),3));
-		buf.append("SL:").append(memory.read(0x2000)); // scanLine
+        buf.append("A:").append(String.format("%02X", registers[RegisterType.accumulator])).append(" ");
+        buf.append("X:").append(String.format("%02X", registers[RegisterType.X])).append(" ");
+        buf.append("Y:").append(String.format("%02X", registers[RegisterType.Y])).append(" ");
+        buf.append("P:").append(String.format("%02X", registers[RegisterType.status])).append(" ");
+        buf.append("SP:").append(String.format("%02X", registers[RegisterType.stackPointer])).append(" ");
+        buf.append("CYC:").append(StringUtil.leftPad("" + ((cycles * 3) % 341), 3));
+        buf.append("SL:").append(memory.read(0x2000)); // scanLine
         //buf.append("CYC:").append(StringUtil.leftPad(""+cycles, 3));
-		return buf.toString();
-	}
+        return buf.toString();
+    }
 
-    private void displayRegisters(){
+    private void displayRegisters() {
         StringBuffer buf = new StringBuffer();
         buf.append("PC:").append(Integer.toHexString(registers[RegisterType.programCounter])).append("\t");
         buf.append("A:").append(Integer.toHexString(registers[RegisterType.accumulator])).append(" ");
         buf.append("X:").append(Integer.toHexString(registers[RegisterType.X])).append(" ");
         buf.append("Y:").append(Integer.toHexString(registers[RegisterType.Y])).append(" ");
-		buf.append("P:").append(Integer.toHexString(registers[RegisterType.status])).append(" ");
+        buf.append("P:").append(Integer.toHexString(registers[RegisterType.status])).append(" ");
         buf.append("SP:").append(Integer.toHexString(registers[RegisterType.stackPointer])).append(" ");
         buf.append("Z=").append(getZeroFlag()).append(",");
         buf.append("I=").append(getInterruptsDisabled()).append(",");
@@ -493,56 +488,52 @@ public class MOS6502Emulator implements CPU
         logger.info("REGISTERS: " + buf);
     }
 
-    protected boolean applyIndexing(Instruction.AddressingMode mode, int[] operands, int pc){
+    protected boolean applyIndexing(Instruction.AddressingMode mode, int[] operands, int pc) {
         boolean boundaryCrossed = false;
-        switch (mode){
-        case IndexedX:
-        case ZeroPageIndexedX:
-            {
+        switch (mode) {
+            case IndexedX:
+            case ZeroPageIndexedX: {
                 int addr = toInt(operands);
                 addr = (addr + (0xFF & readRegister(RegisterType.X)));
-                if (mode == Instruction.AddressingMode.ZeroPageIndexedX){
+                if (mode == Instruction.AddressingMode.ZeroPageIndexedX) {
                     addr &= 0xFF;
                 }
                 operands[0] = (addr & 0xFF);
                 operands[1] = (addr & 0xFF00) >> 8;
             }
             break;
-        case IndexedY:
-        case ZeroPageIndexedY:
-            {
+            case IndexedY:
+            case ZeroPageIndexedY: {
                 int addr = toInt(operands);
                 int oldAddr = addr;
                 addr += readRegister(RegisterType.Y);
-                if ((addr & 0x100) != (oldAddr & 0x100)){ // check page boundary crossing
+                if ((addr & 0x100) != (oldAddr & 0x100)) { // check page boundary crossing
                     boundaryCrossed = true;
                 }
-                if (mode == Instruction.AddressingMode.ZeroPageIndexedY){
+                if (mode == Instruction.AddressingMode.ZeroPageIndexedY) {
                     addr &= 0xFF;
                 }
                 operands[0] = (addr & 0xFF);
                 operands[1] = (addr & 0xFF00) >> 8;
-		
+
             }
             break;
-        case Relative: // signed
-            int newval = (byte)operands[0] + pc;
+            case Relative: // signed
+                int newval = (byte) operands[0] + pc;
 
-            operands[0] = newval & 0xFF;
-            operands[1] = (newval & 0xFF00) >> 8;
-			if ((newval & 0x100) != (pc & 0x100)){ // check page boundary crossing
-				boundaryCrossed = true;
-			}
-            break;
-        case Indirect:
-            {
-                int addr = toInt(operands);
-                
-                int val = 0;
-                if ((addr & 0xFF) != 0xFF){
-                    val = memory.readWord(addr);
+                operands[0] = newval & 0xFF;
+                operands[1] = (newval & 0xFF00) >> 8;
+                if ((newval & 0x100) != (pc & 0x100)) { // check page boundary crossing
+                    boundaryCrossed = true;
                 }
-                else { // deals with xxFF bug
+                break;
+            case Indirect: {
+                int addr = toInt(operands);
+
+                int val = 0;
+                if ((addr & 0xFF) != 0xFF) {
+                    val = memory.readWord(addr);
+                } else { // deals with xxFF bug
                     val = memory.read(addr) | (memory.read(addr & 0xFF00) << 8);
                 }
                 //                System.out.println("Indirect address: " + Integer.toHexString(val));
@@ -550,93 +541,88 @@ public class MOS6502Emulator implements CPU
                 operands[1] = ((val & 0xFF00) >> 8);
             }
             break;
-        case PreIndexedIndirect: // is more effectively called ZeroPagePreIndexedIndirect...
+            case PreIndexedIndirect: // is more effectively called ZeroPagePreIndexedIndirect...
             {
-                
+
                 int addr = 0xFF & (operands[0] + (0xFF & readRegister(RegisterType.X))) & 0xFF;
 
                 int val = 0;
-                if (addr == 0xFF){
+                if (addr == 0xFF) {
                     val = 0xFFFF & (memory.read(addr) | (memory.read(0) << 8));
-                }
-                else {
-                    val = memory.readWord(addr);                    
+                } else {
+                    val = memory.readWord(addr);
                 }
                 operands[0] = val & 0xFF;
                 operands[1] = (val & 0xFF00) >> 8;
             }
             break;
-        case PostIndexedIndirect:
-            {
+            case PostIndexedIndirect: {
                 int addr = operands[0];
                 int val = 0;
-                if (addr == 0xFF){
+                if (addr == 0xFF) {
                     val = 0xFFFF & (memory.read(addr) | (memory.read(0) << 8));
-                }
-                else {
-                    val = memory.readWord(addr);                    
+                } else {
+                    val = memory.readWord(addr);
                 }
                 val = val + (0xFF & readRegister(RegisterType.Y));
                 operands[0] = val & 0xFF;
                 operands[1] = (val & 0xFF00) >> 8;
             }
             break;
-            }
-        return boundaryCrossed;            
+        }
+        return boundaryCrossed;
     }
 
 
     /**
-     * NOTE: This method will update the ProgramCounter 
+     * NOTE: This method will update the ProgramCounter
      */
-    protected InstructionBean fetchAndDecodeInstruction(int pc){
-	if (pc == LOAD_RAM_ADDRESS){ // intercept BASIC load's call to LOAD RAM
-	    System.out.println("Intercepting LOADRAM");
-	    handleLoadRAMFromDevice();
-	    InstructionBean bean = new InstructionBean(pc, 0x60, instructionSet.getByOpCode(0x60), new int[0]);
-	    return bean;
-	}
-	else if (pc == OPEN_DEVICE_ADDRESS) { // intercept serial open
-	    System.out.println("Intercepting serial open");
-	    InstructionBean bean = new InstructionBean(pc, 0x60,instructionSet.getByOpCode(0x60), new int[0]);
-	    return bean;
-	}
+    protected InstructionBean fetchAndDecodeInstruction(int pc) {
+        if (pc == LOAD_RAM_ADDRESS) { // intercept BASIC load's call to LOAD RAM
+            System.out.println("Intercepting LOADRAM");
+            handleLoadRAMFromDevice();
+            InstructionBean bean = new InstructionBean(pc, 0x60, instructionSet.getByOpCode(0x60), new int[0]);
+            return bean;
+        } else if (pc == OPEN_DEVICE_ADDRESS) { // intercept serial open
+            System.out.println("Intercepting serial open");
+            InstructionBean bean = new InstructionBean(pc, 0x60, instructionSet.getByOpCode(0x60), new int[0]);
+            return bean;
+        }
 
-	int[] operands = new int[2];
-	long fetchStart = 1;
-	int opcode = 0xFF & memory.read(pc);
-	Instruction instruction = instructionSet.getByOpCode(opcode);
-    
-	long fetchEnd = 1;
-	fetchElapsed += (fetchEnd - fetchStart);
-	if (instruction == null){
-        //        	    System.err.println("Unknown opcode: " + Integer.toHexString(opcode));
-        //    return null;
-        System.out.println("Undefied opcode: " + Integer.toHexString(opcode) + " switching to NOP");
-        instruction = instructionSet.getByOpCode(0xEA); // NOP
-        opcode = 0xEA;
+        int[] operands = new int[2];
+        long fetchStart = 1;
+        int opcode = 0xFF & memory.read(pc);
+        Instruction instruction = instructionSet.getByOpCode(opcode);
 
-	}
-	
-	//if (shouldLog && logger.isLoggable(Level.FINEST))
-	//logger.finest(instruction.getAssembly());
-	
+        long fetchEnd = 1;
+        fetchElapsed += (fetchEnd - fetchStart);
+        if (instruction == null) {
+            //        	    System.err.println("Unknown opcode: " + Integer.toHexString(opcode));
+            //    return null;
+            System.out.println("Undefied opcode: " + Integer.toHexString(opcode) + " switching to NOP");
+            instruction = instructionSet.getByOpCode(0xEA); // NOP
+            opcode = 0xEA;
+
+        }
+
+        //if (shouldLog && logger.isLoggable(Level.FINEST))
+        //logger.finest(instruction.getAssembly());
+
         /** "DEOODE" OPERANDS **/
         Instruction.AddressingMode mode = instruction.getAddressingMode();
         //if (shouldLog && logger.isLoggable(Level.FINEST))
         //logger.finest(mode.toString());
-	
+
         // we always use the same operand data
         operands[0] = 0;
         operands[1] = 0;
         //int instructionData = opcode << 16;
         int numBytes = mode.getByteCount();
         //	    int[] operands = new int[numBytes];
-        if (numBytes > 0){
-            if (numBytes == 1){
+        if (numBytes > 0) {
+            if (numBytes == 1) {
                 operands[0] = memory.read(pc + 1);
-            }
-            else if (numBytes == 2){
+            } else if (numBytes == 2) {
                 int val = memory.readWord(pc + 1);
                 operands[0] = val & 0xFF;
                 operands[1] = (val & 0xFF00) >> 8;
@@ -647,61 +633,56 @@ public class MOS6502Emulator implements CPU
               operands[i-1] = 0xFF & memory.read(pc + i);
               }
             */
-	    
+
         }
 
         InstructionBean bean = new InstructionBean(pc, opcode, instruction, operands);
         pc = pc + 1 + numBytes; // move our PC to the next instruction
-        writeRegister(RegisterType.programCounter,pc); // this can get overwritten by the instruction
+        writeRegister(RegisterType.programCounter, pc); // this can get overwritten by the instruction
 
         long decodeStart = 1;
         // now, we apply the addressing mode (basically , follow any indirects or indexes)
-        if (numBytes > 0){
-            switch (mode){
-            case IndexedX:
-            case ZeroPageIndexedX:
-                {
+        if (numBytes > 0) {
+            switch (mode) {
+                case IndexedX:
+                case ZeroPageIndexedX: {
                     int addr = toInt(operands);
                     addr += readRegister(RegisterType.X);
                     operands[0] = (addr & 0xFF);
                     operands[1] = (addr & 0xFF00) >> 8;
                 }
                 break;
-            case IndexedY:
-            case ZeroPageIndexedY:
-                {
+                case IndexedY:
+                case ZeroPageIndexedY: {
                     int addr = toInt(operands);
                     addr += readRegister(RegisterType.Y);
                     operands[0] = (addr & 0xFF);
                     operands[1] = (addr & 0xFF00) >> 8;
-		    
+
                 }
                 break;
-            case Relative: // signed
-                int newval = (byte)operands[0] + pc;
-                operands[0] = newval & 0xFF;
-                operands[1] = (newval & 0xFF00) >> 8;
-                break;
-            case Indirect:
-                {
+                case Relative: // signed
+                    int newval = (byte) operands[0] + pc;
+                    operands[0] = newval & 0xFF;
+                    operands[1] = (newval & 0xFF00) >> 8;
+                    break;
+                case Indirect: {
                     int addr = toInt(operands);
-		    
+
                     int val = memory.readWord(addr);
                     operands[0] = val & 0xFF;
                     operands[1] = ((val & 0xFF00) >> 8);
                 }
                 break;
-            case PreIndexedIndirect:
-                {
+                case PreIndexedIndirect: {
                     int addr = (operands[0] + readRegister(RegisterType.X)) % 0xFF;
                     int val = memory.readWord(addr);
-		    
+
                     operands[0] = val & 0xFF;
                     operands[1] = (val & 0xFF00) >> 8;
                 }
                 break;
-            case PostIndexedIndirect:
-                {
+                case PostIndexedIndirect: {
                     int addr = operands[0];
                     int val = 0xFFFF & memory.readWord(addr);
                     val = val + (0xFF & readRegister(RegisterType.Y));
@@ -711,7 +692,7 @@ public class MOS6502Emulator implements CPU
                 break;
             }
         }
-	
+
         long decodeEnd = 1;
         decodeElapsed += (decodeEnd - decodeStart);
 
@@ -719,329 +700,297 @@ public class MOS6502Emulator implements CPU
         return bean;
     }
 
-    public int readRegister(int rt){
+    public int readRegister(int rt) {
         //if (shouldLog && logger.isLoggable(Level.FINEST))
         //  logger.finest("Reading from register: " + rt);
-        if (rt == RegisterType.status){
+        if (rt == RegisterType.status) {
             return registers[rt] | STATUS_FLAG_UNUSED; // unused flag
-        }
-        else return registers[rt];
+        } else return registers[rt];
     }
 
-    public void writeRegister(int rt, int value){
+    public void writeRegister(int rt, int value) {
         //	if (shouldLog && logger.isLoggable(Level.FINEST))
         //  logger.finest("Writing to register " + rt + ": " + value + "(" + Integer.toHexString(value));
         registers[rt] = value;
-        if (rt == RegisterType.status){
-			setStatusFlags();
+        if (rt == RegisterType.status) {
+            setStatusFlags();
         }
     }
 
-	protected void setStatusFlags() {
-		int value = registers[RegisterType.status];
-		setCarryFlag((value & STATUS_FLAG_CARRY) != 0);
-		setZeroFlag((value & STATUS_FLAG_ZERO) != 0);
-		setInterruptsDisabled((value & STATUS_FLAG_INTERRUPT) != 0);
-		setSignFlag((value & STATUS_FLAG_SIGN) != 0);
-		setDecimalFlag((value & STATUS_FLAG_DECIMAL) != 0);
-		setOverflowFlag((value & STATUS_FLAG_OVERFLOW) != 0);
-		setBreakFlag((value & STATUS_FLAG_BREAK) != 0);
-	}
+    protected void setStatusFlags() {
+        int value = registers[RegisterType.status];
+        setCarryFlag((value & STATUS_FLAG_CARRY) != 0);
+        setZeroFlag((value & STATUS_FLAG_ZERO) != 0);
+        setInterruptsDisabled((value & STATUS_FLAG_INTERRUPT) != 0);
+        setSignFlag((value & STATUS_FLAG_SIGN) != 0);
+        setDecimalFlag((value & STATUS_FLAG_DECIMAL) != 0);
+        setOverflowFlag((value & STATUS_FLAG_OVERFLOW) != 0);
+        setBreakFlag((value & STATUS_FLAG_BREAK) != 0);
+    }
 
-    public void setInterruptsDisabled(boolean disabled){
-        if (disabled){
+    public void setInterruptsDisabled(boolean disabled) {
+        if (disabled) {
             registers[RegisterType.status] |= STATUS_FLAG_INTERRUPT;
-        }
-        else {
+        } else {
             registers[RegisterType.status] &= (~STATUS_FLAG_INTERRUPT);
         }
         interruptsDisabled = disabled;
     }
-    
-    public boolean getInterruptsDisabled(){
+
+    public boolean getInterruptsDisabled() {
         return interruptsDisabled;
     }
 
-    public void setCarryFlag(boolean carry){
+    public void setCarryFlag(boolean carry) {
         this.carryFlag = carry;
-        if (carry){
+        if (carry) {
             registers[RegisterType.status] |= STATUS_FLAG_CARRY;
-        }
-        else {
+        } else {
             registers[RegisterType.status] &= (~STATUS_FLAG_CARRY);
         }
     }
 
-    public boolean getCarryFlag(){
+    public boolean getCarryFlag() {
         return carryFlag;
     }
 
-    public void setDecimalFlag(boolean decimal){
-        if (decimal){
+    public void setDecimalFlag(boolean decimal) {
+        if (decimal) {
             registers[RegisterType.status] |= STATUS_FLAG_DECIMAL;
-        }
-        else {
+        } else {
             registers[RegisterType.status] &= (~STATUS_FLAG_DECIMAL);
         }
         this.decimalFlag = decimal;
     }
 
-    public boolean getDecimalFlag(){
+    public boolean getDecimalFlag() {
         return decimalFlag;
     }
 
-    public void setZeroFlag(boolean zero){
-        if (zero){
+    public void setZeroFlag(boolean zero) {
+        if (zero) {
             registers[RegisterType.status] |= STATUS_FLAG_ZERO;
-        }
-        else {
+        } else {
             registers[RegisterType.status] &= (~STATUS_FLAG_ZERO);
         }
         this.zeroFlag = zero;
     }
 
-    public boolean getZeroFlag(){
+    public boolean getZeroFlag() {
         return zeroFlag;
     }
 
-    public void setSignFlag(boolean signed){
-        if (signed){
+    public void setSignFlag(boolean signed) {
+        if (signed) {
             registers[RegisterType.status] |= STATUS_FLAG_SIGN;
-        }
-        else {
+        } else {
             registers[RegisterType.status] &= (~STATUS_FLAG_SIGN);
         }
         this.signFlag = signed;
     }
 
-    public boolean getSignFlag(){
+    public boolean getSignFlag() {
         return signFlag;
     }
 
-    public void setOverflowFlag(boolean overflow){
-        if (overflow){
+    public void setOverflowFlag(boolean overflow) {
+        if (overflow) {
             registers[RegisterType.status] |= STATUS_FLAG_OVERFLOW;
-        }
-        else {
+        } else {
             registers[RegisterType.status] &= (~STATUS_FLAG_OVERFLOW);
         }
         this.overflowFlag = overflow;
     }
 
-    public boolean getOverflowFlag(){
+    public boolean getOverflowFlag() {
         return overflowFlag;
     }
 
-    public void setBreakFlag(boolean breakFlag){
-        if (breakFlag){
+    public void setBreakFlag(boolean breakFlag) {
+        if (breakFlag) {
             registers[RegisterType.status] |= STATUS_FLAG_BREAK;
-        }
-        else {
+        } else {
             registers[RegisterType.status] &= (~STATUS_FLAG_BREAK);
         }
         this.breakFlag = breakFlag;
     }
-    
 
-    public boolean getBreakFlag(){
+
+    public boolean getBreakFlag() {
         return breakFlag;
     }
 
     private boolean handleDebuggingBreakPoint() {
-		displayRegisters();
-		try {
-		    boolean done = true;
-		    while (true){
+        displayRegisters();
+        try {
+            boolean done = true;
+            while (true) {
                 System.err.print(">");
                 BufferedReader bufferedIn = new BufferedReader(new java.io.InputStreamReader(System.in));
                 String line = null;
-                while ((line = bufferedIn.readLine()) == null){}
-                if (line.startsWith("callstack")){
-                    InstructionBean trace = (InstructionBean)instructionBuffer.getFirst();
-                    while (trace != null){
-                        trace.display();
-                        trace = (InstructionBean)instructionBuffer.getNext();
-                    }
-			
+                while ((line = bufferedIn.readLine()) == null) {
                 }
-                else if (line.startsWith("getvectors")){
+                if (line.startsWith("callstack")) {
+                    InstructionBean trace = (InstructionBean) instructionBuffer.getFirst();
+                    while (trace != null) {
+                        trace.display();
+                        trace = (InstructionBean) instructionBuffer.getNext();
+                    }
+
+                } else if (line.startsWith("getvectors")) {
                     System.out.println("NMI: " + Integer.toHexString(memory.readWord(NMI_ADDRESS)));
                     System.out.println("IRQ: " + Integer.toHexString(memory.readWord(IRQ_VECTOR_ADDRESS)));
                     return false;
-                }
-                else if (line.startsWith("c")){
+                } else if (line.startsWith("c")) {
                     inBreakPoint = false;
                     breakAddress = -1;
                     return false;
-                }
-                else if (line.startsWith("g")){ // run until new address
+                } else if (line.startsWith("g")) { // run until new address
                     inBreakPoint = false;
-                    breakAddress = Integer.parseInt(line.substring(1),16);
+                    breakAddress = Integer.parseInt(line.substring(1), 16);
                     return false;
-                }
-                else if (line.indexOf("stack") != -1){
+                } else if (line.indexOf("stack") != -1) {
                     System.out.println("-- STACK --");
                     int i = registers[RegisterType.stackPointer];
                     i++;
-                    while (i <= 255){
+                    while (i <= 255) {
                         System.out.println(Integer.toHexString(memory.read(i | 0x100)));
                         i++;
                     }
                     System.out.println("[--------]");
-			     
-                }
-                else if (line.indexOf("dumpram") != -1){
+
+                } else if (line.indexOf("dumpram") != -1) {
                     String[] params = line.split(" ");
-                    int start = Integer.parseInt(params[1],16);
-                    int end = Integer.parseInt(params[2],16);
+                    int start = Integer.parseInt(params[1], 16);
+                    int end = Integer.parseInt(params[2], 16);
                     String filename = params[3];
-                    memory.dump(start,end,filename);
+                    memory.dump(start, end, filename);
                 }
                 /* loads a raw RAM file, assumes that first 2 bytes specify location*/
-                else if (line.indexOf("loadraw") != -1){
+                else if (line.indexOf("loadraw") != -1) {
                     String[] params = line.split(" ");
                     String filename = params[1];
-                    ROM rom = new ROM(filename,new File(filename));
+                    ROM rom = new ROM(filename, new File(filename));
                     byte[] data = rom.getRaw();
-                    for (int i = 0; i < data.length-2; i++){
-                        memory.write(0x801 + i,0xFF & data[i+2]);
+                    for (int i = 0; i < data.length - 2; i++) {
+                        memory.write(0x801 + i, 0xFF & data[i + 2]);
                     }
-                    memory.write(0xBA,8); // set device number
+                    memory.write(0xBA, 8); // set device number
                     System.out.println("Loaded " + filename + " at " + Integer.toHexString(0x801));
-                }
-                else if (line.indexOf("loadprg") != -1){
-                        String[] params = line.split(" ");
-                        String filename = params[1];
-                        PRGFile prgFile = new PRGFile(new File(filename));
-                        memory.write(prgFile.getStartAddress(),prgFile.getData());
-                        memory.write(0xBA,8); // set device number
-                        System.out.println("Loaded " + prgFile.getFilename() + " at " + Integer.toHexString(prgFile.getStartAddress()));
-                    }
-                else if (line.indexOf("read") != -1){
+                } else if (line.indexOf("loadprg") != -1) {
                     String[] params = line.split(" ");
-                    int val = memory.read(Integer.parseInt(params[1],16));
+                    String filename = params[1];
+                    PRGFile prgFile = new PRGFile(new File(filename));
+                    memory.write(prgFile.getStartAddress(), prgFile.getData());
+                    memory.write(0xBA, 8); // set device number
+                    System.out.println("Loaded " + prgFile.getFilename() + " at " + Integer.toHexString(prgFile.getStartAddress()));
+                } else if (line.indexOf("read") != -1) {
+                    String[] params = line.split(" ");
+                    int val = memory.read(Integer.parseInt(params[1], 16));
                     System.out.println(val + " " + Integer.toHexString(val));
-                }
-                else if (line.indexOf("write") != -1){
+                } else if (line.indexOf("write") != -1) {
                     String[] params = line.split(" ");
                     try {
-                        memory.write(Integer.parseInt(params[1]),Integer.parseInt(params[2]));
-                    }
-                    catch (Throwable t){
+                        memory.write(Integer.parseInt(params[1]), Integer.parseInt(params[2]));
+                    } catch (Throwable t) {
                         t.printStackTrace();
                     }
-                }
-                else if (line.startsWith("skipped")){ // skip current instruction
+                } else if (line.startsWith("skipped")) { // skip current instruction
                     return true;
-                }
-                else if (line.startsWith("setreg")){
+                } else if (line.startsWith("setreg")) {
                     String[] params = line.split(" ");
                     String reg = params[1];
                     int val = Integer.parseInt(params[2]);
-                    if (("X").equalsIgnoreCase(reg)){
+                    if (("X").equalsIgnoreCase(reg)) {
                         registers[RegisterType.X] = val;
-                    }
-                    else if (("Y").equalsIgnoreCase(reg)){
+                    } else if (("Y").equalsIgnoreCase(reg)) {
                         registers[RegisterType.Y] = val;
-                    }
-                    else if (("C").equalsIgnoreCase(reg)){
+                    } else if (("C").equalsIgnoreCase(reg)) {
                         setCarryFlag(1 == val);
-                    }
-                    else if (("B").equalsIgnoreCase(reg)){
+                    } else if (("B").equalsIgnoreCase(reg)) {
                         setBreakFlag(1 == val);
-                    }
-                    else if (("A").equalsIgnoreCase(reg)){
+                    } else if (("A").equalsIgnoreCase(reg)) {
                         registers[RegisterType.accumulator] = val;
-                    }
-                    else if (("Z").equalsIgnoreCase(reg)){
+                    } else if (("Z").equalsIgnoreCase(reg)) {
                         setZeroFlag(1 == val);
-                    }else if (("S").equalsIgnoreCase(reg)){
-                    	setSignFlag(1 == val);
+                    } else if (("S").equalsIgnoreCase(reg)) {
+                        setSignFlag(1 == val);
                     }
-                }
-                                                   
-                else if (line.startsWith("s")){ // stop
+                } else if (line.startsWith("s")) { // stop
                     keepRunning = false;
                     return false;
-                }
-                else if (line.indexOf("nolog") != -1){
+                } else if (line.indexOf("nolog") != -1) {
                     shouldLog = false;
-                    if (line.trim().length() > "dolog".length()){
+                    if (line.trim().length() > "dolog".length()) {
                         memory.disableLogging(line.substring(5));
-                    }
-                    else {
+                    } else {
                         memory.disableLogging();
                     }
-                }
-                else if (line.indexOf("dolog") != -1){
+                } else if (line.indexOf("dolog") != -1) {
                     shouldLog = true;
-                    if (line.trim().length() > "dolog".length()){
+                    if (line.trim().length() > "dolog".length()) {
                         memory.enableLogging(line.substring(5));
-                    }
-                    else {
+                    } else {
                         memory.enableLogging();
                     }
-                }
-                else if (line.indexOf("time") != -1){
+                } else if (line.indexOf("time") != -1) {
                     StringBuffer cpuLine = new StringBuffer();
                     double micros = elapsedTime / 1000.0;
                     cpuLine.append("Elapsed: ").append(micros);
                     cpuLine.append(" Average(ms): ").append(micros / loopCount);
                     double decodeMicros = decodeElapsed / 1000.0;
-                    cpuLine.append(" Avg FetchDecode(ms): ").append(decodeMicros/loopCount);
+                    cpuLine.append(" Avg FetchDecode(ms): ").append(decodeMicros / loopCount);
 
                     double fetchMicros = fetchElapsed / 1000.0;
-                    cpuLine.append(" Avg Fetch(ms): ").append(fetchMicros/loopCount);
+                    cpuLine.append(" Avg Fetch(ms): ").append(fetchMicros / loopCount);
 
                     double executeMicros = executeElapsed / 1000.0;
-                    cpuLine.append(" Avg Execute(ms): ").append(executeMicros/loopCount);
+                    cpuLine.append(" Avg Execute(ms): ").append(executeMicros / loopCount);
                     double loopFreq = loopCount / (micros / 1000000.0);
 
                     double inputMicros = inputElapsed / 1000.0;
-                    cpuLine.append(" Avg Input(ms): ").append(inputMicros/loopCount);
+                    cpuLine.append(" Avg Input(ms): ").append(inputMicros / loopCount);
                     cpuLine.append(" Loop Freq: ").append(loopFreq);
                     cpuLine.append(" Cycle FReq: ").append(cycles / (micros / 1000000));
                     //			cpuLine.append(" Average Memory Read(us): ").append(memory.getAverageReadTime());
                     System.out.println(cpuLine.toString());
-                }
-                else if (line.startsWith("n") || line.trim().equals("")){ // run next instruction
+                } else if (line.startsWith("n") || line.trim().equals("")) { // run next instruction
                     return false;
                 }
-		    }
-		    
-		}
-		catch (java.io.IOException e){
-		}
-		return false;
+            }
+
+        } catch (java.io.IOException e) {
+        }
+        return false;
 
     }
 
-    public void pushStack(byte val){
+    public void pushStack(byte val) {
         int sp = 0xFF & readRegister(RegisterType.stackPointer);
-        memory.write(sp | 0x100, (byte)(val & 0xFF));
+        memory.write(sp | 0x100, (byte) (val & 0xFF));
         sp = (sp - 1) & 0xFF;
         writeRegister(RegisterType.stackPointer, sp & 0xFF);
     }
 
-    public int popStack(){
+    public int popStack() {
         int sp = readRegister(RegisterType.stackPointer);
         sp = (sp + 1) & 0xFF;
 
         writeRegister(RegisterType.stackPointer, sp & 0xFF);
         return 0xFF & memory.read(sp | 0x100);
     }
-    
+
     // currently assumes "RAW", but could just go off the extension...
-    private void handleLoadRAMFromDevice(){
+    private void handleLoadRAMFromDevice() {
         int start = registers[RegisterType.X] | (registers[RegisterType.Y] << 8);
         int filenameLen = memory.read(0xB7);
         System.out.println("Filename len: " + filenameLen);
         byte[] fileBytes = new byte[filenameLen];
         int fileStart = memory.readWord(0xBB);
         System.out.println("File start: " + Integer.toHexString(fileStart));
-        for (int i = 0; i < filenameLen; i++){
-            fileBytes[i] = (byte)memory.read(fileStart+i);
-            System.out.println("Read " + Integer.toHexString(memory.read(fileStart+i)));
+        for (int i = 0; i < filenameLen; i++) {
+            fileBytes[i] = (byte) memory.read(fileStart + i);
+            System.out.println("Read " + Integer.toHexString(memory.read(fileStart + i)));
         }
         String filename = new String(fileBytes);
         File file = new File("roms/tsuite/Testsuite/" + filename);
@@ -1049,18 +998,17 @@ public class MOS6502Emulator implements CPU
         try {
             ROM rom = new ROM(filename, file);
             byte[] data = rom.getRaw();
-            for (int i = 0; i < data.length-2; i++){
-                memory.write(start + i,0xFF & data[i+2]);
+            for (int i = 0; i < data.length - 2; i++) {
+                memory.write(start + i, 0xFF & data[i + 2]);
             }
             //writeRegister(RegisterType.X,(start + (data.length -2)) & 0xFF);
             //writeRegister(RegisterType.Y,(start + (data.length -2)) >> 8);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private int toInt(int[] lowHigh){
+    private int toInt(int[] lowHigh) {
         return (0xFF & lowHigh[0]) | ((0xFF & lowHigh[1]) << 8);
     }
 
@@ -1068,58 +1016,59 @@ public class MOS6502Emulator implements CPU
         return memory;
     }
 
-    class InstructionBean{
+    class InstructionBean {
         int address;
-		int opcode;
+        int opcode;
         Instruction instruction;
         int[] operands;
-		int[] actual;
-        public InstructionBean(int address, int opcode, Instruction instruction, int[] operands){
+        int[] actual;
+
+        public InstructionBean(int address, int opcode, Instruction instruction, int[] operands) {
             this.address = address;
             this.instruction = instruction;
             this.operands = new int[operands.length];
-			this.actual = new int[instruction.getAddressingMode().getByteCount()];
-			this.opcode = opcode;
-            System.arraycopy(operands, 0, this.operands,0,2);
-			System.arraycopy(operands, 0, this.actual,0,actual.length);
+            this.actual = new int[instruction.getAddressingMode().getByteCount()];
+            this.opcode = opcode;
+            System.arraycopy(operands, 0, this.operands, 0, 2);
+            System.arraycopy(operands, 0, this.actual, 0, actual.length);
         }
 
-        void display(){
-            System.err.println(Integer.toHexString(address) + " " + instruction.getFullAssemblyLine(instruction.getAddressingMode(),operands));
+        void display() {
+            System.err.println(Integer.toHexString(address) + " " + instruction.getFullAssemblyLine(instruction.getAddressingMode(), operands));
         }
 
-		public String toLogOutput() {
-			return "Hello world";
-		}
+        public String toLogOutput() {
+            return "Hello world";
+        }
 
-		public String toString() {
-			StringBuffer  out = new StringBuffer(Integer.toHexString(address)).append("  ");
-			out.append(Integer.toHexString(opcode));
-			if (actual.length > 0) {
-				out.append(" ");
-				out.append(String.format("%02X",actual[0]));
-			} else {
-				out.append("   ");
-			}
-			if (actual.length > 1) {
-				out.append(" ").append(String.format("%02X", actual[1]));
-			} else {
-				out.append("   ");
-			}
-			out.append("  ");
-			int len = out.length();
-			out.append(instruction.getAssembly());
-			if (actual.length > 0) {
-				out.append(" ");
-				if (instruction.getAddressingMode() == Instruction.AddressingMode.Immediate) {
-					out.append("#");
-				}
-				out.append(Instruction.hex(actual));
-			}
-			int newlen = out.length() - len;
-			out.append(StringUtil.leftPad("", 12 - newlen));
-			return out.toString().toUpperCase();
-		}
+        public String toString() {
+            StringBuffer out = new StringBuffer(Integer.toHexString(address)).append("  ");
+            out.append(Integer.toHexString(opcode));
+            if (actual.length > 0) {
+                out.append(" ");
+                out.append(String.format("%02X", actual[0]));
+            } else {
+                out.append("   ");
+            }
+            if (actual.length > 1) {
+                out.append(" ").append(String.format("%02X", actual[1]));
+            } else {
+                out.append("   ");
+            }
+            out.append("  ");
+            int len = out.length();
+            out.append(instruction.getAssembly());
+            if (actual.length > 0) {
+                out.append(" ");
+                if (instruction.getAddressingMode() == Instruction.AddressingMode.Immediate) {
+                    out.append("#");
+                }
+                out.append(Instruction.hex(actual));
+            }
+            int newlen = out.length() - len;
+            out.append(StringUtil.leftPad("", 12 - newlen));
+            return out.toString().toUpperCase();
+        }
     }
 }
 
