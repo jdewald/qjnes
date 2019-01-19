@@ -1,0 +1,1009 @@
+package org.fortytwo.common.cpu;
+
+import org.fortytwo.common.util.Ringbuffer;
+import org.fortytwo.common.util.PRGFile;
+import java.io.File;
+
+import org.fortytwo.common.memory.Memory;
+import org.fortytwo.common.memory.ROM;
+
+import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+/**
+ * Emulatores a MOS6502/6510
+ */
+public class MOS6502Emulator implements CPU
+{
+    public static final int INITIAL_ADDRESS = 0xFFFC; // pointer to reset vector in kernel
+    public static final int IRQ_VECTOR_ADDRESS = 0xFFFE;
+
+    public static final int REGISTER_COUNT = 6;
+    private boolean interruptsDisabled;
+    private boolean carryFlag;
+    private boolean decimalFlag;
+    private boolean zeroFlag;
+    private boolean signFlag;
+    private boolean overflowFlag;
+
+    public static final int STATUS_FLAG_CARRY = 0x1;
+    public static final int STATUS_FLAG_ZERO = 0x2;
+    public static final int STATUS_FLAG_INTERRUPT = 0x4;
+    public static final int STATUS_FLAG_DECIMAL = 0x8;
+    public static final int STATUS_FLAG_BREAK = 0x16;
+    public static final int STATUS_FLAG_OVERFLOW = 0x64;
+    public static final int STATUS_FLAG_SIGN = 0x128;
+
+    public static final int LOAD_RAM_ADDRESS = 0xF49E; // LOAD RAM from DEVICE
+    public static final int SCROLL_SCREEN_ADDRESS = 0xE8EA;
+    public static final int OPEN_DEVICE_ADDRESS = 0xF3D5;
+    //    private int operands[] = new int[2]; // so we don't have to keep creating this...does it matter?
+    public static final int EMULATED_CLOCK_SPEED = 1022700;
+    private int[] registers = new int[REGISTER_COUNT];
+
+    // Common addresses
+    private static final int ADDRESS_CURSOR_LINE_NUMBER = 0xD6;
+    private static final int ADDRESS_CURSOR_INPUT_X = 0xC9;
+    private static final int ADDRESS_LINE_NUMBER_TEMP = 0x2A5;
+
+    private int breakAddress = -1;
+    boolean keepRunning = true;
+    boolean inBreakPoint = false;
+    
+    double elapsedTime = 0.0;
+    long fetchElapsed;
+    long decodeElapsed = 0;
+    long executeElapsed = 0;
+    long inputElapsed = 0;
+    long loopCount = 0;
+    long cycles = 0;
+
+    private ArrayList<CycleObserver> observers;
+	boolean shouldLog = true;
+    //private Hashtable<RegisterType,Integer> registers;
+    private Logger logger;
+    private Memory memory;
+    private Ringbuffer instructionBuffer;
+
+    public MOS6502Emulator(){
+        logger = Logger.getLogger(this.getClass().getName());
+        //registers = new Hashtable<RegisterType,Integer>(RegisterType.values().length);
+        interruptsDisabled = false;
+        carryFlag = false;
+        decimalFlag = false;
+        zeroFlag = false;
+        signFlag = false;
+        overflowFlag = false;
+        observers = new ArrayList<CycleObserver>();
+        instructionBuffer = new Ringbuffer(20);
+    }
+
+    public void setMemory(Memory memory){
+        this.memory = memory;
+    }
+
+    public void registerCycleObserver(CycleObserver observer){
+        observers.add(observer);
+    }
+
+    public void setBreak(int address){
+        this.breakAddress = address;
+    }
+
+    public void run(){
+        if (memory == null){
+            throw new RuntimeException("Memory must be initialized!");
+        }
+	
+        InstructionSet.loadInstructions(); // [REMOVE] can take a bit to instantiate 255 objects
+        //performBootupSequence();
+        writeRegister(RegisterType.programCounter,memory.readWord(INITIAL_ADDRESS));
+
+        int operands[] = new int[2];
+        long start = 0;
+        long end = 0;
+        long fetchStart = 0;
+        long fetchEnd = 0;
+        boolean skipped = false;
+        int cyclesUntilInterrupt = 0;
+        int skippedCycles = 0;
+        while (keepRunning){
+            if (inBreakPoint){
+                System.out.println("[-------- START CYCLE -------------]");
+            }
+            start = System.nanoTime();
+
+            int pc = readRegister(RegisterType.programCounter);
+
+            if (pc == breakAddress){
+                inBreakPoint = true;
+            }
+
+
+            /** FETCH INSTRUCTION **/
+            fetchStart = System.nanoTime();
+            int opcode = 0xFF & memory.read(pc);
+            //* [REMOVE]
+            Instruction instruction = InstructionSet.getByOpCode(opcode); 
+            fetchEnd = System.nanoTime();
+            fetchElapsed += (fetchEnd - fetchStart);
+            if (instruction == null){
+                System.err.println("Unknown opcode: " + Integer.toHexString(opcode));
+                    InstructionBean trace = (InstructionBean)instructionBuffer.getFirst();
+                    while (trace != null){
+                        trace.display();
+                        trace = (InstructionBean)instructionBuffer.getNext();
+                    }
+                return;
+            }
+	        //* [/REMOVE]
+            //if (shouldLog && logger.isLoggable(Level.FINEST))
+            //logger.finest(instruction.getAssembly());
+	
+            /** "DEOODE" OPERANDS **/
+            Instruction.AddressingMode mode = instruction.getAddressingMode(); // [REPLACE]:$mode
+        
+            //if (shouldLog && logger.isLoggable(Level.FINEST))
+            //logger.finest(mode.toString());
+	
+            // we always use the same operand data
+            operands[0] = 0;
+            operands[1] = 0;
+            //int instructionData = opcode << 16;
+            int numBytes = mode.getByteCount();
+            //	    int[] operands = new int[numBytes];
+            if (numBytes > 0){
+                if (numBytes == 1){
+                    operands[0] = memory.read(pc + 1);
+                }
+                else if (numBytes == 2){
+                    int val = memory.readWord(pc + 1);
+                    operands[0] = val & 0xFF;
+                    operands[1] = (val & 0xFF00) >> 8;
+                }
+                /*
+                  for (int i = 1; i <= numBytes; i++){
+                  //instructionData |= ((0xFF & memory.read(pc + i)) << (8 * (2- i)));
+                  operands[i-1] = 0xFF & memory.read(pc + i);
+                  }
+                */
+	    
+            }
+
+            // REMOVE]
+            InstructionBean instructionBean = new InstructionBean(pc, instruction, operands); // [REMOVE]
+            if (pc == LOAD_RAM_ADDRESS){ // intercept BASIC load's call to LOAD RAM
+                System.out.println("Intercepting LOADRAM");
+                handleLoadRAMFromDevice();
+                
+                instructionBean = new InstructionBean(pc, InstructionSet.getByOpCode(0x60), new int[2]); // [REMOVE]
+                instruction = instructionBean.instruction; // [REMOVE]
+                opcode = 0x60;
+                //	    return bean;
+            }
+            
+            else if (pc == SCROLL_SCREEN_ADDRESS){
+                System.out.println("Intercepted Scroll");
+                handleScrollScreen();
+                
+                instructionBean = new InstructionBean(pc, InstructionSet.getByOpCode(0x60), new int[2]); // [REMOVE]
+                instruction = instructionBean.instruction; // [REMOVE]
+                opcode = 0x60;
+            }
+            //* [REMOVE
+                        //	InstructionBean instructionBean = fetchAndDecodeInstruction(pc);
+
+            pc = pc + 1 + numBytes; // move our PC to the next instruction
+            writeRegister(RegisterType.programCounter,pc); // this can get overwritten by the instruction
+
+            long decodeStart = System.nanoTime();
+            // now, we apply the addressing mode (basically , follow any indirects or indexes)
+            if (numBytes > 0){
+                applyIndexing(mode, operands, pc);
+		      
+            }
+	
+            long decodeEnd = System.nanoTime();
+            decodeElapsed += (decodeEnd - decodeStart);
+
+	
+            //	    InstructionBean instructionBean = fetchAndDecodeInstruction(pc);
+            instructionBuffer.add(instructionBean); // [REMOVE]
+
+            if (inBreakPoint){
+                end = System.nanoTime();
+                elapsedTime += (end - start);
+	       
+                instructionBean.display(); // [REMOVE]
+                //		System.out.println(Integer.toHexString(pc) + " " + instructionBean.instruction.getFullAssemblyLine(mode,instructionBean.operands));
+
+                skipped = handleDebuggingBreakPoint();
+                start = System.nanoTime();
+            }
+
+
+            boolean interrupted = false;
+
+
+            if (! skipped){
+                try {
+                    long executeStart = System.nanoTime();
+                    //int cycles_ = instructionBean.instruction.execute(operands, memory, this);
+                    int cycles_ = instruction.execute(operands, memory, this); // [REPLACE]:$execute
+                    cycles += cycles_;
+
+		
+                    executeElapsed += (System.nanoTime() - executeStart);
+
+                    skippedCycles += cycles_;
+		    
+                    if (skippedCycles >= cyclesUntilInterrupt){
+                        cyclesUntilInterrupt = notifyObservers(skippedCycles);
+                        //    logger.info("Cycles Until Interrupt: " + cyclesUntilInterrupt);
+                        if (cyclesUntilInterrupt == 0){
+                            interrupted = true;
+                        }
+                        skippedCycles = 0;
+		    
+                    }
+
+                }
+                catch (InstructionException e){
+                    e.printStackTrace();
+                    //* [REMOVE]
+                    InstructionBean trace = (InstructionBean)instructionBuffer.getFirst();
+                    while (trace != null){
+                        trace.display();
+                        trace = (InstructionBean)instructionBuffer.getNext();
+                    }
+		            //* [/REMOVE]
+                    return;
+                }
+            }
+            skipped = false;
+            end = System.nanoTime();
+            elapsedTime += (end - start);
+
+            if ((! interruptsDisabled) && interrupted){ // basically doing a JSR to the jump vector
+                if (inBreakPoint){
+                    System.out.println("[--- START IRQ ---]");
+                }
+                handleInterrupt();
+                if (inBreakPoint){
+                    System.out.println("[--- END IRQ   ---]");
+                }
+		    
+            }
+            loopCount++;
+
+            if (inBreakPoint){
+                System.out.println("[---------- END CYCLE ---------------]");
+            }
+        }
+    }
+
+    //* [INSERT]:$instructions
+
+    private void handleInterrupt(){
+        interruptsDisabled = true;
+        int irqAddress = memory.readWord(IRQ_VECTOR_ADDRESS);
+        int progCounter = readRegister(RegisterType.programCounter);
+        pushStack((byte)((progCounter & 0xFF00) >> 8));
+        pushStack((byte)((progCounter & 0xFF)));
+        int status = getCarryFlag() ? STATUS_FLAG_CARRY : 0x00;
+        status |= getZeroFlag() ? STATUS_FLAG_ZERO : 0x00;
+        status |= getDecimalFlag() ? STATUS_FLAG_DECIMAL : 0x00;
+        status |= getSignFlag() ? STATUS_FLAG_SIGN : 0x00;
+	
+        pushStack((byte)status);
+	
+        writeRegister(RegisterType.programCounter, irqAddress);
+   
+        //inBreakPoint = true;
+        //handleDebuggingBreakPoint();
+	
+    }
+    private int notifyObservers(int cycles){
+        //	logger.info("Notifying observers of " + cycles + " cycles" );
+        int untilInterrupt = 9999999;
+        for (CycleObserver observer : observers){
+            int tmp = observer.tick(cycles);
+            //  logger.info(observer.getClass().getName() + " cycles: " + tmp);
+            if (tmp != -1 && tmp < untilInterrupt){
+                untilInterrupt = tmp;
+            }
+            /*            if (tmp == 0 && ! interruptsDisabled){
+                System.out.println("Interrupted by: " + observer.getClass().getName());
+            }
+            */
+        }
+        return untilInterrupt;
+    }
+    private void clearRegisters(){
+        for (int i = 0; i < REGISTER_COUNT; i++){
+            registers[i] = 0;
+        }
+    }
+
+    private void displayRegisters(){
+        StringBuffer buf = new StringBuffer();
+        buf.append("PC=").append(Integer.toHexString(registers[RegisterType.programCounter])).append(",");
+        buf.append("SP=").append(Integer.toHexString(registers[RegisterType.stackPointer])).append(",");
+        buf.append("A=").append(Integer.toHexString(registers[RegisterType.accumulator])).append(",");
+        buf.append("X=").append(Integer.toHexString(registers[RegisterType.X])).append(",");
+        buf.append("Y=").append(Integer.toHexString(registers[RegisterType.Y])).append(",");
+        buf.append("Z=").append(getZeroFlag()).append(",");
+        buf.append("C=").append(getCarryFlag()).append(",");
+        buf.append("S=").append(getSignFlag()).append(",");
+        buf.append("O=").append(getOverflowFlag());
+        logger.info("REGISTERS: " + buf);
+    }
+
+    protected void applyIndexing(Instruction.AddressingMode mode, int[] operands, int pc){
+        switch (mode){
+        case IndexedX:
+        case ZeroPageIndexedX:
+            {
+                int addr = toInt(operands);
+                addr += readRegister(RegisterType.X);
+                operands[0] = (addr & 0xFF);
+                operands[1] = (addr & 0xFF00) >> 8;
+            }
+            break;
+        case IndexedY:
+        case ZeroPageIndexedY:
+            {
+                int addr = toInt(operands);
+                addr += readRegister(RegisterType.Y);
+                operands[0] = (addr & 0xFF);
+                operands[1] = (addr & 0xFF00) >> 8;
+		
+            }
+            break;
+        case Relative: // signed
+            int newval = (byte)operands[0] + pc;
+            operands[0] = newval & 0xFF;
+            operands[1] = (newval & 0xFF00) >> 8;
+            break;
+        case Indirect:
+            {
+                int addr = toInt(operands);
+		
+                int val = memory.readWord(addr);
+                //                System.out.println("Indirect address: " + Integer.toHexString(val));
+                operands[0] = val & 0xFF;
+                operands[1] = ((val & 0xFF00) >> 8);
+            }
+            break;
+        case PreIndexedIndirect:
+            {
+                int addr = (operands[0] + readRegister(RegisterType.X)) % 0xFF;
+                int val = memory.readWord(addr);
+		
+                operands[0] = val & 0xFF;
+                operands[1] = (val & 0xFF00) >> 8;
+            }
+            break;
+        case PostIndexedIndirect:
+            {
+                int addr = operands[0];
+                int val = 0xFFFF & memory.readWord(addr);
+                val = val + (0xFF & readRegister(RegisterType.Y));
+                operands[0] = val & 0xFF;
+                operands[1] = (val & 0xFF00) >> 8;
+            }
+            break;
+        }
+	
+    }
+
+    /**
+     * NOTE: This method will update the ProgramCounter 
+     */
+    protected InstructionBean fetchAndDecodeInstruction(int pc){
+	if (pc == LOAD_RAM_ADDRESS){ // intercept BASIC load's call to LOAD RAM
+	    System.out.println("Intercepting LOADRAM");
+	    handleLoadRAMFromDevice();
+	    InstructionBean bean = new InstructionBean(pc, InstructionSet.getByOpCode(0x60), new int[0]);
+	    return bean;
+	}
+	else if (pc == OPEN_DEVICE_ADDRESS) { // intercept serial open
+	    System.out.println("Intercepting serial open");
+	    InstructionBean bean = new InstructionBean(pc, InstructionSet.getByOpCode(0x60), new int[0]);
+	    return bean;
+	}
+
+	int[] operands = new int[2];
+	long fetchStart = System.nanoTime();
+	int opcode = 0xFF & memory.read(pc);
+	Instruction instruction = InstructionSet.getByOpCode(opcode);
+	long fetchEnd = System.nanoTime();
+	fetchElapsed += (fetchEnd - fetchStart);
+	if (instruction == null){
+	    System.err.println("Unknown opcode: " + Integer.toHexString(opcode));
+	    return null;
+	}
+	
+	//if (shouldLog && logger.isLoggable(Level.FINEST))
+	//logger.finest(instruction.getAssembly());
+	
+        /** "DEOODE" OPERANDS **/
+        Instruction.AddressingMode mode = instruction.getAddressingMode();
+        //if (shouldLog && logger.isLoggable(Level.FINEST))
+        //logger.finest(mode.toString());
+	
+        // we always use the same operand data
+        operands[0] = 0;
+        operands[1] = 0;
+        //int instructionData = opcode << 16;
+        int numBytes = mode.getByteCount();
+        //	    int[] operands = new int[numBytes];
+        if (numBytes > 0){
+            if (numBytes == 1){
+                operands[0] = memory.read(pc + 1);
+            }
+            else if (numBytes == 2){
+                int val = memory.readWord(pc + 1);
+                operands[0] = val & 0xFF;
+                operands[1] = (val & 0xFF00) >> 8;
+            }
+            /*
+              for (int i = 1; i <= numBytes; i++){
+              //instructionData |= ((0xFF & memory.read(pc + i)) << (8 * (2- i)));
+              operands[i-1] = 0xFF & memory.read(pc + i);
+              }
+            */
+	    
+        }
+
+        InstructionBean bean = new InstructionBean(pc, instruction, operands);
+        pc = pc + 1 + numBytes; // move our PC to the next instruction
+        writeRegister(RegisterType.programCounter,pc); // this can get overwritten by the instruction
+
+        long decodeStart = System.nanoTime();
+        // now, we apply the addressing mode (basically , follow any indirects or indexes)
+        if (numBytes > 0){
+            switch (mode){
+            case IndexedX:
+            case ZeroPageIndexedX:
+                {
+                    int addr = toInt(operands);
+                    addr += readRegister(RegisterType.X);
+                    operands[0] = (addr & 0xFF);
+                    operands[1] = (addr & 0xFF00) >> 8;
+                }
+                break;
+            case IndexedY:
+            case ZeroPageIndexedY:
+                {
+                    int addr = toInt(operands);
+                    addr += readRegister(RegisterType.Y);
+                    operands[0] = (addr & 0xFF);
+                    operands[1] = (addr & 0xFF00) >> 8;
+		    
+                }
+                break;
+            case Relative: // signed
+                int newval = (byte)operands[0] + pc;
+                operands[0] = newval & 0xFF;
+                operands[1] = (newval & 0xFF00) >> 8;
+                break;
+            case Indirect:
+                {
+                    int addr = toInt(operands);
+		    
+                    int val = memory.readWord(addr);
+                    System.out.println("Indirect address: " + Integer.toHexString(val));
+                    operands[0] = val & 0xFF;
+                    operands[1] = ((val & 0xFF00) >> 8);
+                }
+                break;
+            case PreIndexedIndirect:
+                {
+                    int addr = (operands[0] + readRegister(RegisterType.X)) % 0xFF;
+                    int val = memory.readWord(addr);
+		    
+                    operands[0] = val & 0xFF;
+                    operands[1] = (val & 0xFF00) >> 8;
+                }
+                break;
+            case PostIndexedIndirect:
+                {
+                    int addr = operands[0];
+                    int val = 0xFFFF & memory.readWord(addr);
+                    val = val + (0xFF & readRegister(RegisterType.Y));
+                    operands[0] = val & 0xFF;
+                    operands[1] = (val & 0xFF00) >> 8;
+                }
+                break;
+            }
+        }
+	
+        long decodeEnd = System.nanoTime();
+        decodeElapsed += (decodeEnd - decodeStart);
+
+
+        return bean;
+    }
+
+    public int readRegister(int rt){
+        //if (shouldLog && logger.isLoggable(Level.FINEST))
+        //  logger.finest("Reading from register: " + rt);
+        if (rt == RegisterType.status){
+            return registers[rt] | 0x32; // unused flag
+        }
+        else return registers[rt];
+    }
+
+    public void writeRegister(int rt, int value){
+        //	if (shouldLog && logger.isLoggable(Level.FINEST))
+        //  logger.finest("Writing to register " + rt + ": " + value + "(" + Integer.toHexString(value));
+        registers[rt] = value;
+        if (rt == RegisterType.status){
+            setCarryFlag((value & STATUS_FLAG_CARRY) != 0);
+            setZeroFlag((value & STATUS_FLAG_ZERO) != 0);
+            setInterruptsDisabled((value & STATUS_FLAG_INTERRUPT) != 0);
+            setSignFlag((value & STATUS_FLAG_SIGN) != 0);
+            setDecimalFlag((value & STATUS_FLAG_DECIMAL) != 0);
+            setOverflowFlag((value & STATUS_FLAG_OVERFLOW) != 0);
+
+        }
+    }
+
+    public void setInterruptsDisabled(boolean disabled){
+        if (disabled){
+            registers[RegisterType.status] |= STATUS_FLAG_INTERRUPT;
+        }
+        else {
+            registers[RegisterType.status] &= (~STATUS_FLAG_INTERRUPT);
+        }
+        interruptsDisabled = disabled;
+    }
+    
+    public void setCarryFlag(boolean carry){
+        this.carryFlag = carry;
+        if (carry){
+            registers[RegisterType.status] |= STATUS_FLAG_CARRY;
+        }
+        else {
+            registers[RegisterType.status] &= (~STATUS_FLAG_CARRY);
+        }
+    }
+
+    public boolean getCarryFlag(){
+        return carryFlag;
+    }
+
+    public void setDecimalFlag(boolean decimal){
+        if (decimal){
+            registers[RegisterType.status] |= STATUS_FLAG_DECIMAL;
+        }
+        else {
+            registers[RegisterType.status] &= (~STATUS_FLAG_DECIMAL);
+        }
+        this.decimalFlag = decimal;
+    }
+
+    public boolean getDecimalFlag(){
+        return decimalFlag;
+    }
+
+    public void setZeroFlag(boolean zero){
+        if (zero){
+            registers[RegisterType.status] |= STATUS_FLAG_ZERO;
+        }
+        else {
+            registers[RegisterType.status] &= (~STATUS_FLAG_ZERO);
+        }
+        this.zeroFlag = zero;
+    }
+
+    public boolean getZeroFlag(){
+        return zeroFlag;
+    }
+
+    public void setSignFlag(boolean signed){
+        if (signed){
+            registers[RegisterType.status] |= STATUS_FLAG_SIGN;
+        }
+        else {
+            registers[RegisterType.status] &= (~STATUS_FLAG_SIGN);
+        }
+        this.signFlag = signed;
+    }
+
+    public boolean getSignFlag(){
+        return signFlag;
+    }
+
+    public void setOverflowFlag(boolean overflow){
+        if (overflow){
+            registers[RegisterType.status] |= STATUS_FLAG_OVERFLOW;
+        }
+        else {
+            registers[RegisterType.status] &= (~STATUS_FLAG_OVERFLOW);
+        }
+        this.overflowFlag = overflow;
+    }
+    
+    public boolean getOverflowFlag(){
+        return overflowFlag;
+    }
+
+
+    private boolean handleDebuggingBreakPoint() {
+		displayRegisters();
+		try {
+		    boolean done = true;
+		    while (true){
+                System.out.print(">");
+                BufferedReader bufferedIn = new BufferedReader(new java.io.InputStreamReader(System.in));
+                String line = null;
+                while ((line = bufferedIn.readLine()) == null){}
+                if (line.startsWith("callstack")){
+                    InstructionBean trace = (InstructionBean)instructionBuffer.getFirst();
+                    while (trace != null){
+                        trace.display();
+                        trace = (InstructionBean)instructionBuffer.getNext();
+                    }
+			
+                }
+                else if (line.startsWith("c")){
+                    inBreakPoint = false;
+                    breakAddress = -1;
+                    return false;
+                }
+                else if (line.startsWith("g")){ // run until new address
+                    inBreakPoint = false;
+                    breakAddress = Integer.parseInt(line.substring(1),16);
+                    return false;
+                }
+                else if (line.indexOf("stack") != -1){
+                    System.out.println("-- STACK --");
+                    int i = registers[RegisterType.stackPointer];
+                    i++;
+                    while (i <= 255){
+                        System.out.println(Integer.toHexString(memory.read(i | 0x100)));
+                        i++;
+                    }
+                    System.out.println("[--------]");
+			     
+                }
+                else if (line.indexOf("dumpram") != -1){
+                    String[] params = line.split(" ");
+                    int start = Integer.parseInt(params[1],16);
+                    int end = Integer.parseInt(params[2],16);
+                    String filename = params[3];
+                    memory.dump(start,end,filename);
+                }
+                /* loads a raw RAM file, assumes that first 2 bytes specify location*/
+                else if (line.indexOf("loadraw") != -1){
+                    String[] params = line.split(" ");
+                    String filename = params[1];
+                    ROM rom = new ROM(filename,new File(filename));
+                    byte[] data = rom.getRaw();
+                    for (int i = 0; i < data.length-2; i++){
+                        memory.write(0x801 + i,0xFF & data[i+2]);
+                    }
+                    memory.write(0xBA,8); // set device number
+                    System.out.println("Loaded " + filename + " at " + Integer.toHexString(0x801));
+                }
+                else if (line.indexOf("loadprg") != -1){
+                        String[] params = line.split(" ");
+                        String filename = params[1];
+                        PRGFile prgFile = new PRGFile(new File(filename));
+                        memory.write(prgFile.getStartAddress(),prgFile.getData());
+                        memory.write(0xBA,8); // set device number
+                        System.out.println("Loaded " + prgFile.getFilename() + " at " + Integer.toHexString(prgFile.getStartAddress()));
+                    }
+                else if (line.indexOf("read") != -1){
+                    String[] params = line.split(" ");
+                    System.out.println(memory.read(Integer.parseInt(params[1],16)));
+                }
+                else if (line.startsWith("skipped")){ // skip current instruction
+                    return true;
+                }
+                else if (line.startsWith("setreg")){
+                    String[] params = line.split(" ");
+                    String reg = params[1];
+                    int val = Integer.parseInt(params[2]);
+                    if (("X").equalsIgnoreCase(reg)){
+                        registers[RegisterType.X] = val;
+                    }
+                    else if (("Y").equalsIgnoreCase(reg)){
+                        registers[RegisterType.Y] = val;
+                    }
+                    else if (("C").equalsIgnoreCase(reg)){
+                        setCarryFlag(1 == val);
+                    }
+                }
+                                                   
+                else if (line.startsWith("s")){ // stop
+                    keepRunning = false;
+                    return false;
+                }
+                else if (line.indexOf("nolog") != -1){
+                    shouldLog = false;
+                    memory.disableLogging();
+                }
+                else if (line.indexOf("dolog") != -1){
+                    shouldLog = true;
+                    memory.enableLogging();
+                }
+                else if (line.indexOf("time") != -1){
+                    StringBuffer cpuLine = new StringBuffer();
+                    double micros = elapsedTime / 1000.0;
+                    cpuLine.append("Elapsed: ").append(micros);
+                    cpuLine.append(" Average(ms): ").append(micros / loopCount);
+                    double decodeMicros = decodeElapsed / 1000.0;
+                    cpuLine.append(" Avg FetchDecode(ms): ").append(decodeMicros/loopCount);
+
+                    double fetchMicros = fetchElapsed / 1000.0;
+                    cpuLine.append(" Avg Fetch(ms): ").append(fetchMicros/loopCount);
+
+                    double executeMicros = executeElapsed / 1000.0;
+                    cpuLine.append(" Avg Execute(ms): ").append(executeMicros/loopCount);
+                    double loopFreq = loopCount / (micros / 1000000.0);
+
+                    double inputMicros = inputElapsed / 1000.0;
+                    cpuLine.append(" Avg Input(ms): ").append(inputMicros/loopCount);
+                    cpuLine.append(" Loop Freq: ").append(loopFreq);
+                    cpuLine.append(" Cycle FReq: ").append(cycles / (micros / 1000000));
+                    //			cpuLine.append(" Average Memory Read(us): ").append(memory.getAverageReadTime());
+                    System.out.println(cpuLine.toString());
+                }
+                else if (line.startsWith("n") || line.trim().equals("")){ // run next instruction
+                    return false;
+                }
+		    }
+		    
+		}
+		catch (java.io.IOException e){
+		}
+		return false;
+
+    }
+
+    void pushStack(byte val){
+        int sp = readRegister(RegisterType.stackPointer);
+        memory.write(sp | 0x100, (byte)(val & 0xFF));
+        sp--;
+        writeRegister(RegisterType.stackPointer, sp);
+    }
+
+    int popStack(){
+        int sp = readRegister(RegisterType.stackPointer);
+        sp++;
+        writeRegister(RegisterType.stackPointer, sp);
+        return 0xFF & memory.read(sp | 0x100);
+    }
+    
+    // currently assumes "RAW", but could just go off the extension...
+    private void handleLoadRAMFromDevice(){
+        int start = registers[RegisterType.X] | (registers[RegisterType.Y] << 8);
+        int filenameLen = memory.read(0xB7);
+        System.out.println("Filename len: " + filenameLen);
+        byte[] fileBytes = new byte[filenameLen];
+        int fileStart = memory.readWord(0xBB);
+        System.out.println("File start: " + Integer.toHexString(fileStart));
+        for (int i = 0; i < filenameLen; i++){
+            fileBytes[i] = (byte)memory.read(fileStart+i);
+            System.out.println("Read " + Integer.toHexString(memory.read(fileStart+i)));
+        }
+        String filename = new String(fileBytes);
+        File file = new File("roms/tsuite/Testsuite/" + filename);
+        System.out.println("Start = " + Integer.toHexString(start) + " name = " + filename);
+        try {
+            ROM rom = new ROM(filename, file);
+            byte[] data = rom.getRaw();
+            for (int i = 0; i < data.length-2; i++){
+                memory.write(start + i,0xFF & data[i+2]);
+            }
+            //writeRegister(RegisterType.X,(start + (data.length -2)) & 0xFF);
+            //writeRegister(RegisterType.Y,(start + (data.length -2)) >> 8);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    // E9F0
+    private int handleFetchScreenAddress(int line){
+        // E9F0 fetch screen address
+        int low = memory.read(0xECF0 + line);
+        memory.write(0xD1,low);
+        int high = 0xFF & (memory.read(0xD9+line) & 0x03);
+        high |= memory.read(0x288);
+        memory.write(0xD2, high);
+
+        return low | (high << 8);
+    }
+
+    // EA24
+    private int handleSetColorMemoryAddress(int currentScreenLineAddress){
+        int low = currentScreenLineAddress & 0xFF;
+        int high = ((currentScreenLineAddress >> 8) & 0x3) | 0xD8;
+        memory.write(0xF3,low); // EA24 - EA26
+        memory.write(0xF4,high); // EA28 - EA2E
+        
+        return low | (high << 8);
+    
+    }
+
+    // E9E0
+    private int handleSetColorAndScreenAddresses(int currentScreenLineAddress){
+        int colorMemoryAddress = handleSetColorMemoryAddress(currentScreenLineAddress); //E9E0->EA24
+        int low = memory.read(0xAC);
+        memory.write(0xAE,low);
+        
+        int high = (memory.read(0xAD) & 0x3) | 0xD8;
+        memory.write(0xAF, high);
+        
+        return low | (high << 8);
+    }
+
+    private void handleClearScreenLine(int line){
+        int currentScreenLineAddress = handleFetchScreenAddress(line);
+        int colorMemoryAddress = handleSetColorMemoryAddress(currentScreenLineAddress);
+        int colorVal = memory.read(0x286);
+        for (int column = 39; column > 0; column--){
+            memory.write(colorMemoryAddress + column, colorVal); // clear byte in color ram
+            memory.write(currentScreenLineAddress + column, 0x20); // space
+        } // EA11
+        
+    }        
+
+    private void handleScrollScreen(){
+        int currentScreenLineAddress = handleFetchScreenAddress(0);
+        int[] data = new int[40];
+        for (int line = 1; line <= 24; line++){
+            memory.read(currentScreenLineAddress + 40,data);
+            memory.write(currentScreenLineAddress,data);
+
+            currentScreenLineAddress += 40;
+        }
+        handleClearScreenLine(24);
+        //        memory.write(ADDRESS_CURSOR_LINE_NUMBER, (memory.read(ADDRESS_CURSOR_LINE_NUMBER) - 1) & 0xFF);
+        writeRegister(RegisterType.X, memory.read(ADDRESS_CURSOR_LINE_NUMBER));
+    }
+
+    private void handleClearScreenLine(int line){
+        int currentScreenLineAddress = handleFetchScreenAddress(line);
+        int colorMemoryAddress = handleSetColorMemoryAddress(currentScreenLineAddress);
+        int colorVal = memory.read(0x286);
+        for (int column = 39; column >= 0; column--){
+            memory.write(colorMemoryAddress + column, colorVal); // clear byte in color ram
+            memory.write(currentScreenLineAddress + column, 0x20); // space
+        }
+        
+        
+    }        
+
+    /**
+     * Basically a port of what the assembly does (0xE8EA)
+     */
+    private void handleScrollScreen()_old{
+        pushStack((byte)memory.read(0xAC));
+        pushStack((byte)memory.read(0xAD));
+        pushStack((byte)memory.read(0xAE));
+        pushStack((byte)memory.read(0xAF));
+        int tmp = 1;
+        
+        int X = 0;
+        int accum = 0;
+        int Y = 0;
+        do {
+            memory.write(ADDRESS_CURSOR_LINE_NUMBER,(memory.read(ADDRESS_CURSOR_LINE_NUMBER) - 1) & 0xFF); // move up a line
+            memory.write(ADDRESS_CURSOR_INPUT_X,(memory.read(ADDRESS_CURSOR_INPUT_X) - 1) & 0xFF); // input cursor X
+            memory.write(ADDRESS_LINE_NUMBER_TEMP, (memory.read(ADDRESS_LINE_NUMBER_TEMP) - 1) & 0xFF); // temp line index
+            
+
+            int topOfScreenMemory = 0xFF & memory.read(0x288);
+            int currentScreenLineAddress = memory.read(0xD1) | (memory.read(0xD2) << 8);
+            int currentColorRamAddress = memory.read(0xF3) | (memory.read(0xF4) << 8);
+            
+            int line = 0;
+            
+            // E8FF
+            for ( ; line < 25; line++){
+                
+                // E913
+                // E9FF clear one screen line
+
+                currentScreenLineAddress = handleFetchScreenAddress(line); // E900
+                accum = memory.read(0xECF1 + line); // E907
+                memory.write(0xAC,accum); // E90A
+
+                accum = 0xFF & memory.read(0xDA + line); // E90C
+                
+                //** E9C8 move on screen line
+                // {
+                accum &= 0x03;
+                accum |= topOfScreenMemory;
+                memory.write(0xAD, accum); // E9CD
+            
+                handleSetColorAndScreenAddresses(currentScreenLineAddress); // E9C5 JSR E9E0
+               
+                int address = memory.read(0xAC) | (memory.read(0xAD) << 8); // E9D4
+                int address2 = memory.read(0xAE) | (memory.read(0xAF) << 8); // E9D8
+
+                
+                // E9D2 - E9DD
+                for (int col = 39; col >= 0; col--){
+                    memory.write(currentScreenLineAddress + col, memory.read(address + col));
+                    memory.write(currentColorRamAddress + col, memory.read(address2 + col));
+                }
+                // } // E9DF
+
+            }  // E90E
+            
+            //handleClearScreenLine(line);
+
+            // E916
+            for (int i = 0; i < 24; i++){
+                int v1 = memory.read(0xD9 + i) & 0x7F;
+                int v2 = memory.read(0xDA + i); // E91C
+                if ((v2 & 0x80) != 0){
+                    v1 |= 0x80; // E920
+                }
+                memory.write(0xD9 + i, v1); // e922
+            } // E927
+            
+            memory.write(0xF1, memory.read(0xF1) | 0x80); // E929 - E92D
+            
+            tmp = memory.read(0xD9);
+        } while ((tmp & 0x80) == 0); // E931
+
+        memory.write(ADDRESS_CURSOR_LINE_NUMBER, (memory.read(ADDRESS_CURSOR_LINE_NUMBER) + 1) & 0xFF);
+        memory.write(ADDRESS_LINE_NUMBER_TEMP, (memory.read(ADDRESS_LINE_NUMBER_TEMP) + 1) & 0xFF);
+        
+        int keyscan = 0x7F;
+        memory.write(0xDC00,keyscan);
+        int keyVal = memory.read(0xDC01);
+        /*
+        e940://cmp #$FB
+        int newVal = 0x1FF & (keyVal + (~(0xFB)) + 1); // 2s complement addition
+        setCarryFlag(newVal < 256);
+        setSignFlag((newVal & 0x80) != 0);
+        setZeroFlag((newVal & 0xFF) == 0);
+        e942:pushStack(readRegister(RegisterType.status)); // E942 PHP
+        
+        memory.write(0xDC00,keyscan);
+        
+        e948:writeRegister(RegisterType.status, popStack()); // E949 PLP
+        if ((newVal & 0xFF) == 0){
+            
+        }
+        */
+        memory.write(0xC6, 0);
+        writeRegister(RegisterType.X, memory.read(ADDRESS_CURSOR_LINE_NUMBER));
+
+        memory.write(0xAF, popStack());
+        memory.write(0xAE, popStack());
+        memory.write(0xAD, popStack());
+        memory.write(0xAC, popStack());
+
+    }
+    private int toInt(int[] lowHigh){
+        return (0xFF & lowHigh[0]) | ((0xFF & lowHigh[1]) << 8);
+    }
+
+    class InstructionBean{
+        int address;
+        Instruction instruction;
+        int[] operands;
+        public InstructionBean(int address, Instruction instruction, int[] operands){
+            this.address = address;
+            this.instruction = instruction;
+            this.operands = new int[operands.length];
+            System.arraycopy(operands, 0, this.operands,0,2);
+        }
+
+        void display(){
+            System.out.println(Integer.toHexString(address) + " " + instruction.getFullAssemblyLine(instruction.getAddressingMode(),operands));
+        }
+    }
+}
+
