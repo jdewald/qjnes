@@ -45,7 +45,7 @@ public class Emulator {
 
         int breakpoint = (params.length > 0) ? Integer.parseInt(params[0], 16) : 0;
 
-        File cartridgeFile = (params.length > 1) ? new File(params[1]) : null;
+        var cartridgeFile = (params.length > 1) ? new File(params[1]) : null;
 
         ROM cartridgeROM = null;
         int romStart = 0;
@@ -67,7 +67,7 @@ public class Emulator {
 
         final Memory6502 memory6502 = createMemory(cia1, cartridgeROM, crtFile, vic);
 
-        JMenu cartridgeMenu = ui.getCartridgeMenu();
+        var cartridgeMenu = ui.getCartridgeMenu();
         ui.initUnloadCartridgeMenuItem(cartridgeMenu, memory6502);
 
         //	memory6502.enableLogging();

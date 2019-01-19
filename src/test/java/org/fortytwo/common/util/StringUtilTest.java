@@ -1,6 +1,5 @@
-package org.fortytwo.util;
+package org.fortytwo.common.util;
 
-import org.fortytwo.common.util.StringUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
