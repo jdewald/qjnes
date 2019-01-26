@@ -1,0 +1,15 @@
+;; Object video/
+;; SEMANTICDB Tags save file
+(semanticdb-project-database-file "video/"
+  :tables (list 
+   (semanticdb-table "VICII.java"
+    :major-mode 'java-mode
+    :tags '(("org.fortytwo.c64.video" package nil nil [1 32]) ("VICII" type (:typemodifiers ("public") :members (("VICII" function (:constructor-flag t :typemodifiers ("public")) (reparse-symbol class_member_declaration) [99 120])) :type "class") nil [74 132]))
+    :file "VICII.java"
+    :pointmax 133
+    )
+   )
+  :file "semantic.cache"
+  :semantic-tag-version "2.0beta3"
+  :semanticdb-version "2.0beta3"
+  )
