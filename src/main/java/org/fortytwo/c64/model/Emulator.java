@@ -1,54 +1,42 @@
-package org.fortytwo.c64;
+package org.fortytwo.c64.model;
 
-import org.fortytwo.c64.cpu.MOS6502Emulator;
-import org.fortytwo.c64.cpu.MOS6502InstructionSet;
-import org.fortytwo.c64.io.Joystick;
-import org.fortytwo.c64.io.Keyboard;
-import org.fortytwo.c64.memory.Memory;
-import org.fortytwo.c64.memory.ROM;
-import org.fortytwo.c64.memory.StandardFactory;
-import org.fortytwo.c64.util.CRTFile;
-import org.fortytwo.c64.video.Screen;
-import org.fortytwo.c64.video.VICII;
+import org.fortytwo.c64.view.UI;
+import org.fortytwo.c64.model.memory.Memory6502;
+import org.fortytwo.c64.model.video.VICMemory;
+import org.fortytwo.common.cpu.MOS6502Emulator;
+import org.fortytwo.common.cpu.MOS6502InstructionSet;
+import org.fortytwo.c64.model.io.Joystick;
+import org.fortytwo.c64.model.io.Keyboard;
+import org.fortytwo.common.memory.ROM;
+import org.fortytwo.common.memory.StandardFactory;
+import org.fortytwo.common.util.CRTFile;
+import org.fortytwo.c64.model.video.VICII;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-
-//import org.fortytwo.c64.io._1541;
 
 public class Emulator {
 
     protected static UI ui;
 
-    public static void main(String[] args) {
-        try {
-            final MOS6502Emulator emulator = createMos6502Emulator(args);
-            emulator.run();
 
-        } catch (Throwable e) {
-            e.printStackTrace();
-        } finally {
-            Runtime.getRuntime().exit(0);
-        }
-    }
 
     public static MOS6502Emulator createMos6502Emulator(String[] params) throws IOException {
-        final MOS6502Emulator cpu = new MOS6502Emulator(new MOS6502InstructionSet());
+        final var cpu = new MOS6502Emulator(new MOS6502InstructionSet());
 
-        Keyboard keyboard = new Keyboard(cpu);
-        Joystick joystick = new Joystick();
+        var keyboard = new Keyboard(cpu);
+        var joystick = new Joystick();
 
-        Joystick joystick2 = new Joystick();
+        var joystick2 = new Joystick();
         //_1541 diskDrive = new _1541();
 
-        CIA cia1 = setupCia1(keyboard, joystick);
+        var cia1 = setupCia1(keyboard, joystick);
         //cia2.setIODevice1(joystick2);
         //cia2.setIODevice(diskDrive);
 
         int breakpoint = (params.length > 0) ? Integer.parseInt(params[0], 16) : 0;
 
-        File cartridgeFile = (params.length > 1) ? new File(params[1]) : null;
+        var cartridgeFile = (params.length > 1) ? new File(params[1]) : null;
 
         ROM cartridgeROM = null;
         int romStart = 0;
@@ -66,19 +54,17 @@ public class Emulator {
         ui = new UI(cpu, keyboard, joystick);
         ui.invoke();
 
-        VICII vic = createVic(ui);
+        var vic = createVic(ui);
 
         final Memory6502 memory6502 = createMemory(cia1, cartridgeROM, crtFile, vic);
 
-        JMenu cartridgeMenu = ui.getCartridgeMenu();
+        var cartridgeMenu = ui.getCartridgeMenu();
         ui.initUnloadCartridgeMenuItem(cartridgeMenu, memory6502);
-
 
         //	memory6502.enableLogging();
         setupCpu(cpu, cia1, breakpoint, vic, memory6502);
 
         setupVic(vic, memory6502);
-        
 
             /*Thread cpuThread = new Thread(new Runnable() { public void run() { emulator.run(); } } );
             cpuThread.start();
@@ -105,12 +91,12 @@ public class Emulator {
         /**
          * Now create the view that the VIC sees
          */
-        Memory memoryVIC = new VICMemory(memory6502.getRam(), memory6502.getCia2(), memory6502.getCharROM(), memory6502.getColorRAM());
+        var memoryVIC = new VICMemory(memory6502.getRam(), memory6502.getCia2(), memory6502.getCharROM(), memory6502.getColorRAM());
         vic.setMemory(memoryVIC);
     }
 
     static Memory6502 createMemory(CIA cia1, ROM cartridgeROM, CRTFile crtFile, VICII vic) throws IOException {
-        final Memory6502 memory6502 = new StandardFactory().createStandardMemory6502(vic, cia1, cartridgeROM);
+        final var memory6502 = new StandardFactory().createStandardMemory6502(vic, cia1, cartridgeROM);
         if (crtFile != null) {
             memory6502.setGameStatus(crtFile.getGameStatus());
             memory6502.setExromStatus(crtFile.getExromStatus());
@@ -119,14 +105,14 @@ public class Emulator {
     }
 
     static VICII createVic(UI ui) {
-        VICII vic = new VICII();
-        Screen videoScreen = ui.getVideoScreen();
+        var vic = new VICII();
+        var videoScreen = ui.getVideoScreen();
         vic.setScreen(videoScreen);
         return vic;
     }
 
     static CIA setupCia1(Keyboard keyboard, Joystick joystick) {
-        CIA cia1 = new CIA("CIA1");
+        var cia1 = new CIA("CIA1");
 
         cia1.setKeyboard(keyboard);
         cia1.setJoystick1(joystick);

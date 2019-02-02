@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 
-import org.fortytwo.c64.memory.ROM;
+import org.fortytwo.common.memory.ROM;
 
 public class NESFile 
 {
@@ -45,9 +45,9 @@ public class NESFile
     }
 
     public NESFile(InputStream in, String name) throws IOException {
-        DataInputStream dataIn = new DataInputStream(in);
+        var dataIn = new DataInputStream(in);
         this.name = name;
-        byte[] sig = new byte[SIGNATURE_LENGTH];
+        var sig = new byte[SIGNATURE_LENGTH];
         dataIn.readFully(sig);
 
         signature = new String(sig);
@@ -92,7 +92,7 @@ public class NESFile
         return (0xF0 & flags) >> 4;
     }
     public String toString(){
-        StringBuffer buffer = new StringBuffer();
+        var buffer = new StringBuilder();
         buffer.append(signature).append(",");
         buffer.append(sixteenCount).append(",");
         buffer.append(eightCount).append(",");
@@ -105,10 +105,10 @@ public class NESFile
         return buffer.toString();
     }
     public static void main(String[] args){
-        File file = new File(args[0]);
+        var file = new File(args[0]);
 
         try {
-            NESFile nes = new NESFile(file);
+            var nes = new NESFile(file);
 
             System.out.println(nes);
         }

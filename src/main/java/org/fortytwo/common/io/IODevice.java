@@ -1,4 +1,4 @@
-package org.fortytwo.c64.io;
+package org.fortytwo.common.io;
 
 /**
  * Umm..and I/O device (keyboard, cassette, etc)
