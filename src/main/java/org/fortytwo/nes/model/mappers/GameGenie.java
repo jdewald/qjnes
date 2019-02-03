@@ -1,4 +1,4 @@
-package org.fortytwo.nes.mappers;
+package org.fortytwo.nes.model.mappers;
 
 import org.fortytwo.common.memory.Memory;
 import org.fortytwo.common.memory.BaseMemory;
@@ -6,7 +6,7 @@ import org.fortytwo.common.memory.ROM;
 import org.fortytwo.common.memory.RAM;
 import org.fortytwo.common.cpu.CPU;
 
-import org.fortytwo.nes.util.NESFile;
+import org.fortytwo.nes.model.util.NESFile;
 
 import java.io.File;
 

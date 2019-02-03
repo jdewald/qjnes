@@ -1,4 +1,4 @@
-package org.fortytwo.nes;
+package org.fortytwo.nes.model;
 
 import org.fortytwo.common.memory.Memory;
 import org.fortytwo.common.memory.MemoryHandler;

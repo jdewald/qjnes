@@ -1,4 +1,4 @@
-package org.fortytwo.nes.util;
+package org.fortytwo.nes.model.util;
 
 import java.io.File;
 import java.io.IOException;

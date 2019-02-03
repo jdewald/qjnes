@@ -1,4 +1,4 @@
-package org.fortytwo.nes.mappers;
+package org.fortytwo.nes.model.mappers;
 
 import org.fortytwo.common.memory.BaseMemory;
 import org.fortytwo.common.memory.RAM;

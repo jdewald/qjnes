@@ -1,4 +1,4 @@
-package org.fortytwo.nes.mappers;
+package org.fortytwo.nes.model.mappers;
 
 import org.fortytwo.common.memory.ROM;
 import org.fortytwo.c64.model.memory.MemoryPPU;

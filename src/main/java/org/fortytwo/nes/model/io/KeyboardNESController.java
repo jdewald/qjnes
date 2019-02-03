@@ -1,4 +1,4 @@
-package org.fortytwo.nes.io;
+package org.fortytwo.nes.model.io;
 
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;

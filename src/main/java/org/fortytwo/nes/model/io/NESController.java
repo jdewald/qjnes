@@ -1,4 +1,4 @@
-package org.fortytwo.nes.io;
+package org.fortytwo.nes.model.io;
 
 import org.fortytwo.common.io.IODevice;
 
