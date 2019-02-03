@@ -41,6 +41,4 @@ public class RegisterXOverflowTest {
         assertTrue(emulator.getZeroFlag());
         assertTrue(emulator.getOverflowFlag());
     }
-
-
 }

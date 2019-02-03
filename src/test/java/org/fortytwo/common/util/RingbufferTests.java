@@ -37,9 +37,7 @@ public class RingbufferTests {
         assertEquals(223.4, ringbuffer.getFirst());
         assertEquals(300_000_000L, ringbuffer.getNext());
         assertEquals(300_000_000L, ringbuffer.getCurrent());
-
     }
-
 
     @Test
     public void testAddFirst(){

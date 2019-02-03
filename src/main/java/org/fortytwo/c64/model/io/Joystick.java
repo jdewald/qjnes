@@ -163,10 +163,10 @@ public class Joystick implements IODevice, KeyListener {
 
     public static void main(String[] args) {
         try {
-            Joystick keyboard = new Joystick();
+            var joystick = new Joystick();
 
             while (true) {
-                int val = keyboard.read();
+                int val = joystick.read();
                 if (val != NO_KEYPRESS) {
                     System.out.println("key = " + val);
                 }

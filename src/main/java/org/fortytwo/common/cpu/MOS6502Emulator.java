@@ -1,5 +1,6 @@
 package org.fortytwo.common.cpu;
 
+import org.fortytwo.common.exceptions.InstructionException;
 import org.fortytwo.common.util.Ringbuffer;
 import org.fortytwo.common.util.PRGFile;
 import org.fortytwo.common.util.StringUtil;

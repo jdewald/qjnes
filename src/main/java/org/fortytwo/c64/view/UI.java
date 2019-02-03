@@ -7,6 +7,8 @@ import org.fortytwo.c64.model.io.Keyboard;
 import org.fortytwo.c64.model.video.Screen;
 
 import javax.swing.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class UI {
     private MOS6502Emulator cpu;
@@ -84,12 +86,22 @@ public class UI {
         videoFrame.addKeyListener(keyboard);
         videoFrame.addKeyListener(joystick);
         videoFrame.setFocusable(true);
+
+        videoFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.out.println("Good bye!");
+                System.exit(0);
+            }
+        });
+
         videoFrame.setVisible(true);
     }
 
-    public static void initUnloadCartridgeMenuItem(JMenu cartridgeMenu, Memory6502 memory6502) {
+    public void initUnloadCartridgeMenuItem( Memory6502 memory6502) {
         var unloadItem = new JMenuItem("Unload Cartridge");
         unloadItem.addActionListener(e -> (memory6502).setGameStatus(1));
-        cartridgeMenu.add(unloadItem);
+        this.cartridgeMenu.add(unloadItem);
     }
+
 }

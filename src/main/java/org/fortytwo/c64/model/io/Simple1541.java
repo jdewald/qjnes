@@ -6,13 +6,14 @@ import org.fortytwo.common.io.IODevice;
  * Basically a LOAD only version that doesn't
  * actually handle most of what the 1541 does
  */
-public class Simple1541 implements IODevice
-{
+public class Simple1541 implements IODevice {
     private D64File disk = null;
     public static final int DIRECTORY_TRACK_NUMBER = 18;
-    
+
     private int lastVal = 0;
-    /** pins **/
+    /**
+     * pins
+     **/
     public static final int BIT_INPUT = 0x80;
     public static final int BIT_CLOCK_IN = 0x40;
     public static final int BIT_OUTPUT = 0x20;
@@ -36,55 +37,53 @@ public class Simple1541 implements IODevice
 
     private boolean listenMode = false;
 
-    public Simple1541(){
-	returnVal = 0;
-	counter = 0;
+    public Simple1541() {
+        returnVal = 0;
+        counter = 0;
     }
 
-    public void loadDisk(D64File diskFile){
-	this.disk = diskFile;
+    public void loadDisk(D64File diskFile) {
+        this.disk = diskFile;
     }
 
     //** IODevice
-    public void write(int val){
-	System.out.println("1541: write: " + Integer.toHexString(val));
-	System.out.println("BIT: " + ((val & BIT_OUTPUT) >> 5));
-	int newCLK =  ((val & BIT_CLOCK_OUT) >> 4);
-	System.out.println("CLOCK: " + newCLK);
-	
-	int newATN = ((val & BIT_ATN_OUT) >> 3);
-	System.out.println("ATN: " + newATN);
-	if (newATN != ATN){
-	    System.out.println("LISTEN");
-	    ATN = newATN;
-	    listenMode = true;
-	}
-	if (newCLK != CLK_IN){
-	    System.out.println("CLK Changed");
-	    CLK_IN = newCLK;
-	}
+    public void write(int val) {
+        System.out.println("1541: write: " + Integer.toHexString(val));
+        System.out.println("BIT: " + ((val & BIT_OUTPUT) >> 5));
+        int newCLK = ((val & BIT_CLOCK_OUT) >> 4);
+        System.out.println("CLOCK: " + newCLK);
 
-	lastVal = val;
+        int newATN = ((val & BIT_ATN_OUT) >> 3);
+        System.out.println("ATN: " + newATN);
+        if (newATN != ATN) {
+            System.out.println("LISTEN");
+            ATN = newATN;
+            listenMode = true;
+        }
+        if (newCLK != CLK_IN) {
+            System.out.println("CLK Changed");
+            CLK_IN = newCLK;
+        }
+
+        lastVal = val;
     }
 
-    public int read(){
-	//	System.out.println("1541: read");
-	//	return lastVal;
-	//	return 0x3 & lastVal;
-	if (listenMode){
-	    return 0x40;
-	}
-	else {
-	    counter++;
-	    if (counter == 8){
-		//	    System.out.println("Counter is 0, return 0");
-		counter = 0;
-		return 0;
-	    }
-	    else {
-		return 0x40 | (0x80 & (returnVal << counter));
-	    }
-	}
+    public int read() {
+        //	System.out.println("1541: read");
+        //	return lastVal;
+        //	return 0x3 & lastVal;
+        if (listenMode) {
+            return 0x40;
+        } else {
+            counter++;
+            if (counter == 8) {
+                //	    System.out.println("Counter is 0, return 0");
+                counter = 0;
+                return 0;
+            } else {
+                return 0x40 | (0x80 & (returnVal << counter));
+            }
+        }
     }
-    
+
 }

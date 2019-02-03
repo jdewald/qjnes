@@ -93,15 +93,4 @@ public class D64File {
         }
     }
 
-    public static void main(String args[]) {
-        try {
-            var file = new File(args[0]);
-            var d64File = new D64File(file);
-
-        } catch (Throwable t) {
-            t.printStackTrace();
-        } finally {
-            Runtime.getRuntime().exit(0);
-        }
-    }
 }

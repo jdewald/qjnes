@@ -19,14 +19,11 @@ public class Emulator {
 
     protected static UI ui;
 
-
-
     public static MOS6502Emulator createMos6502Emulator(String[] params) throws IOException {
         final var cpu = new MOS6502Emulator(new MOS6502InstructionSet());
 
         var keyboard = new Keyboard(cpu);
         var joystick = new Joystick();
-
         var joystick2 = new Joystick();
         //_1541 diskDrive = new _1541();
 
@@ -41,6 +38,7 @@ public class Emulator {
         ROM cartridgeROM = null;
         int romStart = 0;
         CRTFile crtFile = null;
+
         if (cartridgeFile != null) {
             System.out.println("reading cartridge from: " + cartridgeFile.getName());
             crtFile = new CRTFile(cartridgeFile);
@@ -58,18 +56,10 @@ public class Emulator {
 
         final Memory6502 memory6502 = createMemory(cia1, cartridgeROM, crtFile, vic);
 
-        var cartridgeMenu = ui.getCartridgeMenu();
-        ui.initUnloadCartridgeMenuItem(cartridgeMenu, memory6502);
-
+        ui.initUnloadCartridgeMenuItem(memory6502);
         //	memory6502.enableLogging();
         setupCpu(cpu, cia1, breakpoint, vic, memory6502);
-
         setupVic(vic, memory6502);
-
-            /*Thread cpuThread = new Thread(new Runnable() { public void run() { emulator.run(); } } );
-            cpuThread.start();
-            cpuThread.join();
-            */
 
         return cpu;
     }
@@ -122,6 +112,5 @@ public class Emulator {
         //            cia1.setIODevice2(joystick);
         return cia1;
     }
-
 
 }
